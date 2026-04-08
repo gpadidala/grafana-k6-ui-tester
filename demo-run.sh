@@ -14,6 +14,7 @@ NC='\033[0m'
 echo -e "${CYAN}"
 echo "╔══════════════════════════════════════════════╗"
 echo "║   Grafana k6 UI Tester — Demo Environment    ║"
+echo "║              by Gopal Rao                     ║"
 echo "╚══════════════════════════════════════════════╝"
 echo -e "${NC}"
 

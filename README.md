@@ -498,6 +498,10 @@ choco install k6
 
 ---
 
+## Author
+
+**Gopal Rao** — [github.com/gpadidala](https://github.com/gpadidala)
+
 ## License
 
 MIT
