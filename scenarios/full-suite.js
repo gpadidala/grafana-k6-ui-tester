@@ -4,7 +4,7 @@ import { browser } from 'k6/browser';
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import config, { buildUrl } from '../config/grafana.config.js';
-import { discoverAll } from '../lib/grafana-api.js';
+import { discoverAll, checkDatasourceHealth, testDatasourceQuery } from '../lib/grafana-api.js';
 import { generateJsonReport, generateHtmlReport } from '../lib/reporter.js';
 import {
   newBrowserContext,
@@ -198,8 +198,6 @@ export async function runAllTests() {
         panelIssues.push(`${panels.noData.length} panel(s) showing "No data": [${panels.noData.join(', ')}]`);
       }
 
-      check(null, { [`${dashboard.title} — no panel errors`]: () => panels.errors.length === 0 && panels.pluginMissing.length === 0 });
-
       // Check 5: Error banners
       const bannerErrors = await checkErrorBanners(page);
       if (bannerErrors.length > 0) {
@@ -208,7 +206,6 @@ export async function runAllTests() {
 
       // Check 6: Time range picker
       const hasTimePicker = await checkTimeRangePicker(page);
-      check(null, { [`${dashboard.title} — time range picker`]: () => hasTimePicker });
       if (!hasTimePicker) {
         panelIssues.push('Time range picker not found');
       }
@@ -230,6 +227,11 @@ export async function runAllTests() {
       } else {
         result.error = `OK — ${panels.total} panels loaded, ${panels.healthy} healthy, load time ${nav.loadTimeMs}ms`;
       }
+
+      // Encode panel result into check name so handleSummary can read it
+      const panelOk = panels.errors.length === 0 && panels.pluginMissing.length === 0;
+      check(null, { [`${dashboard.title} — no panel errors ## ${result.error}`]: () => panelOk });
+      check(null, { [`${dashboard.title} — time range picker`]: () => hasTimePicker });
 
     } catch (e) {
       result.status = 'FAIL';
@@ -290,8 +292,51 @@ export async function runAllTests() {
   console.log('=== Phase 4: Explore & Datasources ===');
   await testPage('/explore', 'Explore Page', 'explore', '', 'explore page loads');
   await testPage('/datasources', 'Datasources List', 'datasources', '', 'datasources page loads');
+
+  // Deep datasource testing: config page + API health + query test
   for (const ds of manifest.datasources) {
-    await testPage(`/datasources/edit/${ds.uid || ds.id}`, `Datasource: ${ds.name}`, 'datasources', ds.uid || String(ds.id), `datasource "${ds.name}" loads`);
+    const result = { category: 'datasources', name: `Datasource: ${ds.name}`, uid: ds.uid || String(ds.id), status: 'PASS', loadTimeMs: 0, error: null };
+    const issues = [];
+
+    // Test 1: Config page loads
+    const nav = await navigateAndTime(page, `/datasources/edit/${ds.uid || ds.id}`);
+    result.loadTimeMs = nav.loadTimeMs;
+    if (!nav.ok && nav.status !== 403) {
+      issues.push(`Config page failed (HTTP ${nav.status || 'timeout'})`);
+    }
+
+    // Test 2: Health check via API (/api/datasources/uid/<uid>/health)
+    const health = checkDatasourceHealth(ds.uid);
+    check(null, { [`datasource "${ds.name}" health`]: () => health.ok });
+    if (!health.ok) {
+      issues.push(`Health check: ${health.status} — ${health.message}`);
+    }
+
+    // Test 3: Query test — actually run a query against the datasource
+    const query = testDatasourceQuery(ds.uid, ds.type);
+    check(null, { [`datasource "${ds.name}" query test`]: () => query.ok });
+    if (!query.ok && query.status !== 'SKIP') {
+      issues.push(`Query test: ${query.status} — ${query.message}`);
+    } else if (query.status === 'SKIP') {
+      issues.push(`Query test skipped (no test query for ${ds.type})`);
+    }
+
+    // Build final status
+    const hasErrors = issues.some(i => i.startsWith('Health check:') || i.startsWith('Query test: HTTP') || i.startsWith('Query test: QUERY_ERROR'));
+    if (hasErrors) {
+      result.status = 'FAIL';
+      result.error = issues.join(' | ');
+      check(null, { [`datasource "${ds.name}" loads`]: () => false });
+    } else if (issues.length > 0) {
+      result.status = issues.some(i => i.startsWith('Config page')) ? 'FAIL' : 'WARN';
+      result.error = issues.join(' | ');
+      check(null, { [`datasource "${ds.name}" loads ## ${result.error}`]: () => result.status !== 'FAIL' });
+    } else {
+      result.error = `OK — health: ${health.status}, query: ${query.status}, config page loaded in ${nav.loadTimeMs}ms`;
+      check(null, { [`datasource "${ds.name}" loads ## ${result.error}`]: () => true });
+    }
+
+    _allResults.push(result);
     rateLimitDelay();
   }
 
@@ -405,16 +450,33 @@ function extractResultsFromChecks(data, manifest) {
   results.push(buildResult('home', 'Home Page', '', 'home page loads'));
   results.push(buildResult('home', 'Dashboard Browser', '', 'dashboard browser loads'));
 
-  // Dashboards
+  // Dashboards — combine page load + panel health checks
   for (const d of manifest.dashboards) {
     const pageChk = statusForCheck(`${d.title} — page loads`);
     const panelChk = statusForCheck(`${d.title} — no panel errors`);
-    let status = pageChk.status;
-    let error = pageChk.error;
-    if (pageChk.status === 'PASS' && panelChk.status === 'FAIL') {
+    let status, error;
+
+    if (pageChk.status === 'FAIL') {
       status = 'FAIL';
-      error = panelChk.error || 'Panel errors detected on dashboard';
+      error = pageChk.error || `Dashboard failed to load`;
+    } else if (panelChk.error && panelChk.error.startsWith('OK')) {
+      // Panel check message starts with OK — dashboard is healthy
+      status = 'PASS';
+      error = panelChk.error;
+    } else if (panelChk.status === 'FAIL') {
+      // Panel errors — check if it's just "no data" (WARN) or real errors (FAIL)
+      const msg = panelChk.error || '';
+      if (msg.includes('panel(s) with errors') || msg.includes('plugin')) {
+        status = 'FAIL';
+      } else {
+        status = 'WARN';
+      }
+      error = panelChk.error || 'Panel issues detected';
+    } else {
+      status = 'PASS';
+      error = panelChk.error || pageChk.error || null;
     }
+
     results.push({ category: 'dashboards', name: d.title, uid: d.uid, status, loadTimeMs: 0, error, createdBy: d.createdBy || '', updatedBy: d.updatedBy || '', created: d.created || '', updated: d.updated || '' });
   }
 
