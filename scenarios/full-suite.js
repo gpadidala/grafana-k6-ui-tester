@@ -160,7 +160,7 @@ export async function runAllTests() {
   // === Phase 2: Dashboards ===
   console.log('=== Phase 2: Dashboards ===');
   for (const dashboard of manifest.dashboards) {
-    const result = { category: 'dashboards', name: dashboard.title, uid: dashboard.uid, url: dashboard.url, status: 'PASS', loadTimeMs: 0, error: null, screenshot: null };
+    const result = { category: 'dashboards', name: dashboard.title, uid: dashboard.uid, url: dashboard.url, status: 'PASS', loadTimeMs: 0, error: null, screenshot: null, createdBy: dashboard.createdBy || '', updatedBy: dashboard.updatedBy || '', created: dashboard.created || '', updated: dashboard.updated || '' };
     try {
       const nav = await retryOperation(async () => navigateAndTime(page, `/d/${dashboard.uid}`));
       result.loadTimeMs = nav.loadTimeMs;
@@ -415,7 +415,7 @@ function extractResultsFromChecks(data, manifest) {
       status = 'FAIL';
       error = panelChk.error || 'Panel errors detected on dashboard';
     }
-    results.push({ category: 'dashboards', name: d.title, uid: d.uid, status, loadTimeMs: 0, error });
+    results.push({ category: 'dashboards', name: d.title, uid: d.uid, status, loadTimeMs: 0, error, createdBy: d.createdBy || '', updatedBy: d.updatedBy || '', created: d.created || '', updated: d.updated || '' });
   }
 
   // Alerts
