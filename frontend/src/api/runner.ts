@@ -1,115 +1,93 @@
-import { TestRun, TestResult, TestSummary } from '../types';
-import { addTestRun, updateTestRun } from './store';
+import { io, Socket } from 'socket.io-client';
 
-// Trigger a test run against the backend
-// In production, this calls your API server which runs k6
-// For now, we simulate + support local backend at /api
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
-export async function triggerTestRun(
-  envId: string,
-  envName: string,
-  grafanaUrl: string,
-  token: string,
-  testLevel: string
-): Promise<TestRun> {
-  const run: TestRun = {
-    id: `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    envId,
-    envName,
-    grafanaUrl,
-    status: 'running',
-    startedAt: new Date().toISOString(),
-    testLevel,
-  };
+let socket: Socket | null = null;
 
-  addTestRun(run);
-
-  try {
-    const res = await fetch(`${API_BASE}/api/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grafanaUrl,
-        token,
-        testLevel,
-        envName,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Backend returned ${res.status}: ${await res.text()}`);
-    }
-
-    const data = await res.json();
-
-    run.status = parseFloat(data.summary?.pass_rate || '0') >= 90 ? 'passed' : 'failed';
-    run.completedAt = new Date().toISOString();
-    run.summary = data.summary;
-    run.results = data.results;
-    run.reportHtml = data.reportHtml;
-
-    updateTestRun(run);
-    return run;
-  } catch (err: any) {
-    // If backend is not running, simulate with mock data
-    console.warn('Backend not available, using mock data:', err.message);
-    return simulateTestRun(run);
+export function getSocket(): Socket {
+  if (!socket) {
+    socket = io(API_BASE, { transports: ['websocket', 'polling'] });
   }
+  return socket;
 }
 
-// Simulate a test run when backend is not available
-async function simulateTestRun(run: TestRun): Promise<TestRun> {
-  await new Promise(r => setTimeout(r, 3000)); // simulate delay
+export interface CategoryInfo {
+  id: string;
+  name: string;
+  icon: string;
+}
 
-  const categories = [
-    { cat: 'login', items: ['Login & Authentication'] },
-    { cat: 'home', items: ['Home Page', 'Dashboard Browser'] },
-    { cat: 'dashboards', items: ['Infrastructure Overview', 'Application Metrics', 'Business KPIs', 'Network Traffic', 'System Health'] },
-    { cat: 'alerts', items: ['Alert Rules List', 'Silences Page', 'Contact Points'] },
-    { cat: 'explore', items: ['Explore Page'] },
-    { cat: 'datasources', items: ['Datasources List', 'Datasource: Prometheus'] },
-    { cat: 'plugins', items: ['Plugins List', 'Plugin: Alertmanager', 'Plugin: Loki'] },
+export async function getCategories(): Promise<CategoryInfo[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/tests/categories`);
+    if (res.ok) return res.json();
+  } catch {}
+  // Fallback if backend not available
+  return [
+    { id: 'api-health',  name: 'API Health',     icon: '💚' },
+    { id: 'datasources', name: 'Data Sources',   icon: '🔌' },
+    { id: 'folders',     name: 'Folders',        icon: '📁' },
+    { id: 'dashboards',  name: 'Dashboards',     icon: '📊' },
+    { id: 'panels',      name: 'Panels',         icon: '🔲' },
+    { id: 'alerts',      name: 'Alerts',         icon: '🔔' },
+    { id: 'plugins',     name: 'Plugins',        icon: '🧩' },
+    { id: 'app-plugins', name: 'App Plugins',    icon: '📦' },
+    { id: 'users',       name: 'Users & Access', icon: '👥' },
+    { id: 'links',       name: 'Links',          icon: '🔗' },
+    { id: 'annotations', name: 'Annotations',    icon: '📝' },
   ];
+}
 
-  const results: TestResult[] = [];
-  categories.forEach(({ cat, items }) => {
-    items.forEach(name => {
-      const r = Math.random();
-      const status = r > 0.15 ? 'PASS' : r > 0.05 ? 'WARN' : 'FAIL';
-      results.push({
-        category: cat,
-        name,
-        uid: name.toLowerCase().replace(/\s+/g, '-'),
-        status: status as any,
-        load_time_ms: Math.round(500 + Math.random() * 3000),
-        error: status === 'PASS'
-          ? `OK — loaded in ${Math.round(500 + Math.random() * 2000)}ms`
-          : status === 'WARN'
-            ? '2 panel(s) showing "No data": [CPU, Memory]'
-            : 'Page /alerting/silences failed (HTTP timeout)',
-      });
+export async function runTests(
+  grafanaUrl: string,
+  token: string,
+  categories?: string[],
+  onProgress?: (evt: any) => void
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const sock = getSocket();
+
+    if (onProgress) {
+      sock.off('test-progress');
+      sock.on('test-progress', onProgress);
+    }
+
+    sock.off('test-complete');
+    sock.on('test-complete', (report: any) => {
+      resolve(report);
     });
+
+    sock.emit('run-tests', { grafanaUrl, token, categories });
+
+    // Timeout after 10 minutes
+    setTimeout(() => reject(new Error('Test run timed out after 10 minutes')), 600000);
   });
+}
 
-  const passed = results.filter(r => r.status === 'PASS').length;
-  const failed = results.filter(r => r.status === 'FAIL').length;
-  const warnings = results.filter(r => r.status === 'WARN').length;
-  const total = results.length;
+export async function runTestsRest(
+  grafanaUrl: string,
+  token: string,
+  categories?: string[]
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/tests/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grafanaUrl, token, categories }),
+  });
+  if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+  return res.json();
+}
 
-  const summary: TestSummary = {
-    total,
-    passed,
-    failed,
-    warnings,
-    pass_rate: `${((passed / total) * 100).toFixed(1)}%`,
-  };
+export async function getReports(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/reports`);
+    if (res.ok) return res.json();
+  } catch {}
+  return [];
+}
 
-  run.status = parseFloat(summary.pass_rate) >= 90 ? 'passed' : 'failed';
-  run.completedAt = new Date().toISOString();
-  run.summary = summary;
-  run.results = results;
-
-  updateTestRun(run);
-  return run;
+export async function getReport(file: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/reports/${file}`);
+  if (!res.ok) throw new Error(`Report not found: ${res.status}`);
+  return res.json();
 }
