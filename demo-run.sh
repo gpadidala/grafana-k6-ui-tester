@@ -12,6 +12,23 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Parse CLI flags
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --runtime) CONTAINER_RUNTIME="$2"; shift 2;;
+    --docker) CONTAINER_RUNTIME="docker"; shift;;
+    --podman) CONTAINER_RUNTIME="podman"; shift;;
+    --help|-h)
+      echo "Usage: ./demo-run.sh [--docker | --podman | --runtime docker|podman]"
+      echo "  --docker    Force Docker runtime"
+      echo "  --podman    Force Podman runtime"
+      echo "  --runtime   Specify runtime (docker or podman)"
+      echo "  (default: auto-detect)"
+      exit 0;;
+    *) echo "Unknown option: $1. Use --help for usage."; exit 1;;
+  esac
+done
+
 echo -e "${CYAN}"
 echo "╔══════════════════════════════════════════════╗"
 echo "║   Grafana k6 UI Tester — Demo Environment    ║"
