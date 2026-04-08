@@ -320,6 +320,45 @@ The HTML report will include a **Version Upgrade Comparison** section showing:
 
 ---
 
+## Docker vs Podman
+
+The framework auto-detects your container runtime. No config changes needed.
+
+| Feature | Docker | Podman |
+|---------|--------|--------|
+| **Auto-detected** | Yes | Yes |
+| **Build command** | `docker compose build` | `podman build` |
+| **Compose tool** | `docker compose` / `docker-compose` | `podman-compose` / `podman compose` |
+| **Dockerfile** | `Dockerfile` | `Containerfile` (symlinked) |
+| **Rootless** | Requires config | Default |
+| **Corporate/air-gapped** | Needs Docker Hub | Works with any registry |
+
+### Force a specific runtime
+
+```bash
+# Force Podman even if Docker is installed
+CONTAINER_RUNTIME=podman ./demo-run.sh
+
+# Force Docker
+CONTAINER_RUNTIME=docker ./demo-run.sh
+```
+
+### Podman with private registry (corporate/air-gapped)
+
+If your environment can't pull from Docker Hub, push the Grafana image to your internal registry first:
+
+```bash
+# Pull and push to internal registry
+podman pull docker.io/grafana/grafana:11.4.0
+podman tag grafana/grafana:11.4.0 your-registry.corp.com/grafana/grafana:11.4.0
+podman push your-registry.corp.com/grafana/grafana:11.4.0
+
+# Update Dockerfile FROM line
+sed -i 's|grafana/grafana:11.4.0|your-registry.corp.com/grafana/grafana:11.4.0|' Dockerfile
+```
+
+---
+
 ## Use Cases
 
 ### 1. Grafana Version Upgrade Validation
@@ -377,8 +416,9 @@ grafana-k6-ui-tester/
 │   │   └── alerting/                 # 5 sample alert rules
 │   └── setup-service-account.sh      # Token generator script
 ├── observability-dashboards/          # 7 Observability-KPI dashboards
-├── Dockerfile                        # Grafana demo image (14 dashboards)
-├── docker-compose.yml                # Docker Compose config
+├── Dockerfile                        # Container image (Docker + Podman)
+├── Containerfile -> Dockerfile       # Podman alias (symlink)
+├── docker-compose.yml                # Compose config (Docker + Podman)
 ├── demo-run.sh                       # One-command demo runner
 ├── run.sh                            # Test runner CLI
 ├── .env.example                      # Environment variable template
@@ -466,6 +506,9 @@ pipeline {
 | Problem | Solution |
 |---------|----------|
 | `./run.sh: No such file or directory` | Run `cd /path/to/grafana-k6-ui-tester` first, or use `bash run.sh` |
+| Podman: `podman-compose not found` | Install: `pip3 install podman-compose` |
+| Podman: image pull fails | Your registry may block Docker Hub. See [Podman with private registry](#podman-with-private-registry-corporateair-gapped) |
+| Podman: permission denied | Run `podman machine init && podman machine start` on macOS |
 | `k6 is required` | Install: `brew install k6` (macOS) or see [k6 install docs](https://grafana.com/docs/k6/latest/set-up/install-k6/) |
 | `connection refused` | Ensure Grafana is running and accessible at the specified URL |
 | All dashboards show "No data" panels | Expected in demo mode — TestData datasource generates random data, not real metrics |
@@ -478,22 +521,32 @@ pipeline {
 ## Prerequisites
 
 - **[k6](https://k6.io/docs/get-started/installation/)** v0.50+ (with browser module)
-- **[Docker](https://docs.docker.com/get-docker/)** (for demo only)
+- **Container runtime** (for demo only) — either:
+  - **[Docker](https://docs.docker.com/get-docker/)** + Docker Compose, or
+  - **[Podman](https://podman.io/docs/installation)** + podman-compose
 - **Python 3** (for report parsing in shell scripts)
 
 ```bash
-# macOS
+# k6 — macOS
 brew install k6
 
-# Linux (Debian/Ubuntu)
+# k6 — Linux (Debian/Ubuntu)
 sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
   --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
 echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
   sudo tee /etc/apt/sources.list.d/k6.list
 sudo apt-get update && sudo apt-get install k6
 
-# Windows
+# k6 — Windows
 choco install k6
+
+# Podman (if not using Docker)
+# macOS
+brew install podman podman-compose
+# Linux (RHEL/CentOS/Fedora)
+sudo dnf install podman podman-compose
+# Linux (Debian/Ubuntu)
+sudo apt-get install podman && pip3 install podman-compose
 ```
 
 ---

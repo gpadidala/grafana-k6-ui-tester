@@ -1,6 +1,7 @@
 #!/bin/bash
 # One-command demo runner
 # Spins up Grafana, creates service account, runs full test suite, shows results
+# Supports both Docker and Podman container runtimes
 
 set -e
 
@@ -18,13 +19,67 @@ echo "║              by Gopal Rao                     ║"
 echo "╚══════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# Check prerequisites
-echo -e "${BLUE}Checking prerequisites...${NC}"
+# ─── Detect container runtime (Docker or Podman) ───
+echo -e "${BLUE}Detecting container runtime...${NC}"
 
-if ! command -v docker &>/dev/null; then
-  echo -e "${RED}ERROR: Docker is required. Install from https://docs.docker.com/get-docker/${NC}"
+CONTAINER_RT=""
+COMPOSE_CMD=""
+
+if [ -n "$CONTAINER_RUNTIME" ]; then
+  # User explicitly set the runtime via env var
+  CONTAINER_RT="$CONTAINER_RUNTIME"
+  echo -e "${YELLOW}Using user-specified runtime: ${CONTAINER_RT}${NC}"
+elif command -v podman &>/dev/null && ! command -v docker &>/dev/null; then
+  CONTAINER_RT="podman"
+elif command -v docker &>/dev/null; then
+  CONTAINER_RT="docker"
+elif command -v podman &>/dev/null; then
+  CONTAINER_RT="podman"
+else
+  echo -e "${RED}ERROR: No container runtime found.${NC}"
+  echo -e "${RED}Install Docker: https://docs.docker.com/get-docker/${NC}"
+  echo -e "${RED}   or Podman:  https://podman.io/docs/installation${NC}"
   exit 1
 fi
+
+echo -e "${GREEN}Container runtime: ${CONTAINER_RT}${NC}"
+
+# ─── Detect compose tool ───
+if [ "$CONTAINER_RT" = "podman" ]; then
+  if command -v podman-compose &>/dev/null; then
+    COMPOSE_CMD="podman-compose"
+  elif command -v podman &>/dev/null && podman compose version &>/dev/null 2>&1; then
+    COMPOSE_CMD="podman compose"
+  elif command -v docker-compose &>/dev/null; then
+    COMPOSE_CMD="docker-compose"
+  else
+    echo -e "${YELLOW}podman-compose not found. Attempting install...${NC}"
+    if command -v pip3 &>/dev/null; then
+      pip3 install podman-compose 2>/dev/null && COMPOSE_CMD="podman-compose"
+    elif command -v pip &>/dev/null; then
+      pip install podman-compose 2>/dev/null && COMPOSE_CMD="podman-compose"
+    fi
+    if [ -z "$COMPOSE_CMD" ]; then
+      echo -e "${RED}ERROR: podman-compose is required. Install: pip3 install podman-compose${NC}"
+      exit 1
+    fi
+  fi
+else
+  # Docker runtime
+  if docker compose version &>/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+  elif command -v docker-compose &>/dev/null; then
+    COMPOSE_CMD="docker-compose"
+  else
+    echo -e "${RED}ERROR: docker compose is required.${NC}"
+    exit 1
+  fi
+fi
+
+echo -e "${GREEN}Compose tool: ${COMPOSE_CMD}${NC}"
+
+# ─── Check k6 ───
+echo -e "${BLUE}Checking prerequisites...${NC}"
 
 if ! command -v k6 &>/dev/null; then
   echo -e "${YELLOW}k6 not found. Attempting auto-install...${NC}"
@@ -57,7 +112,6 @@ if ! command -v k6 &>/dev/null; then
       sudo dnf install -y https://dl.k6.io/rpm/repo.rpm 2>/dev/null || true
       sudo dnf install -y k6
     else
-      # Fallback: download binary
       echo -e "${BLUE}Installing k6 binary for Linux ($ARCH)...${NC}"
       case "$ARCH" in
         x86_64|amd64) K6_ARCH="amd64" ;;
@@ -85,7 +139,6 @@ if ! command -v k6 &>/dev/null; then
     exit 1
   fi
 
-  # Verify installation succeeded
   if ! command -v k6 &>/dev/null; then
     echo -e "${RED}ERROR: k6 installation failed. Install manually: https://grafana.com/docs/k6/latest/set-up/install-k6/${NC}"
     exit 1
@@ -93,23 +146,20 @@ if ! command -v k6 &>/dev/null; then
   echo -e "${GREEN}k6 installed successfully$(k6 version 2>/dev/null && echo " — $(k6 version)" || true)${NC}"
 fi
 
-COMPOSE_CMD="docker compose"
-if ! docker compose version &>/dev/null 2>&1; then
-  if command -v docker-compose &>/dev/null; then
-    COMPOSE_CMD="docker-compose"
-  else
-    echo -e "${RED}ERROR: docker compose is required${NC}"
-    exit 1
-  fi
-fi
+echo -e "${GREEN}All prerequisites met (${CONTAINER_RT} + k6)${NC}"
 
-echo -e "${GREEN}All prerequisites met${NC}"
-
-# Step 1: Build and start Grafana
+# ─── Build image ───
+# For Podman: build with podman build (compose build may not work with all podman-compose versions)
 echo -e "\n${BLUE}[1/5] Building and starting Grafana...${NC}"
 $COMPOSE_CMD down -v 2>/dev/null || true
-$COMPOSE_CMD build --no-cache
-$COMPOSE_CMD up -d
+
+if [ "$CONTAINER_RT" = "podman" ]; then
+  podman build -t grafana-k6-ui-tester-grafana --no-cache .
+  $COMPOSE_CMD up -d
+else
+  $COMPOSE_CMD build --no-cache
+  $COMPOSE_CMD up -d
+fi
 
 # Step 2: Wait for Grafana to be healthy
 echo -e "${BLUE}[2/5] Waiting for Grafana to be healthy...${NC}"
@@ -164,11 +214,9 @@ chmod +x run.sh
 echo -e "\n${BLUE}[5/5] Opening HTML report...${NC}"
 
 if [ -f reports/report.html ]; then
-  # Create symlinks for latest
   ln -sf report.html reports/latest-report.html
   ln -sf report.json reports/latest-report.json
 
-  # Open report
   if [[ "$OSTYPE" == "darwin"* ]]; then
     open reports/report.html
   elif command -v xdg-open &>/dev/null; then
@@ -181,6 +229,7 @@ fi
 echo ""
 echo -e "${CYAN}Demo Grafana is running at: http://localhost:3000${NC}"
 echo -e "${CYAN}Login: admin / admin${NC}"
+echo -e "${CYAN}Runtime: ${CONTAINER_RT} | Compose: ${COMPOSE_CMD}${NC}"
 echo ""
 read -p "Press Enter to tear down the demo environment (or Ctrl+C to keep it running)... "
 
