@@ -12,6 +12,7 @@ Production-grade UI testing framework for Grafana using **k6 Browser** (Chromium
 - [User Guide](#user-guide)
   - [Running the Demo](#running-the-demo)
   - [Testing Your Own Grafana](#testing-your-own-grafana)
+  - [Windows Setup (Git Bash)](#windows-setup-git-bash--no-admin-required)
   - [Understanding the Report](#understanding-the-report)
   - [Reading Error Messages](#reading-error-messages)
   - [Version Upgrade Workflow](#version-upgrade-workflow)
@@ -166,12 +167,27 @@ At the end, press **Enter** to tear down the demo or **Ctrl+C** to keep Grafana 
 
 ### Testing Your Own Grafana
 
-#### Option 1: Service Account Token (Recommended)
+#### Option 1: .env File (Recommended — keeps secrets out of git)
 
-1. In Grafana, go to **Administration > Service Accounts**
-2. Create a new service account with **Admin** role
-3. Generate a token
-4. Run:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+```bash
+GRAFANA_URL=https://your-grafana.example.com
+GRAFANA_TOKEN=glsa_your_token_here
+TEST_LEVEL=full
+```
+
+Then just run:
+```bash
+./run.sh
+```
+
+> `.env` is gitignored — your URL and token will **never** be committed.
+
+#### Option 2: CLI Flags
 
 ```bash
 ./run.sh --url https://your-grafana.example.com \
@@ -179,20 +195,12 @@ At the end, press **Enter** to tear down the demo or **Ctrl+C** to keep Grafana 
          --level full
 ```
 
-#### Option 2: Environment Variables
+#### Option 3: Environment Variables
 
 ```bash
 export GRAFANA_URL=https://your-grafana.example.com
 export GRAFANA_TOKEN=glsa_your_token_here
 export TEST_LEVEL=full
-./run.sh
-```
-
-#### Option 3: .env File
-
-```bash
-cp .env.example .env
-# Edit .env with your values
 ./run.sh
 ```
 
@@ -203,6 +211,60 @@ cp .env.example .env
 | `smoke` | First 5 | Quick health check (< 1 min) |
 | `standard` | First 20 | Regular validation (2-3 min) |
 | `full` | All discovered | Complete audit (5-10 min) |
+
+---
+
+### Windows Setup (Git Bash — No Admin Required)
+
+For corporate Windows environments without admin access:
+
+**Step 1: Install k6 (portable — no admin needed)**
+
+Open Git Bash and run:
+```bash
+mkdir -p ~/k6
+curl -sL https://github.com/grafana/k6/releases/download/v0.56.0/k6-v0.56.0-windows-amd64.zip -o ~/k6/k6.zip
+cd ~/k6 && unzip k6.zip && mv k6-v0.56.0-windows-amd64/k6.exe .
+export PATH="$HOME/k6:$PATH"
+
+# Verify
+k6 version
+```
+
+To make `k6` permanent (no admin):
+1. Open Start Menu, search **"Edit environment variables for your account"**
+2. Select `Path` → Edit → New → add `%USERPROFILE%\k6`
+3. Click OK and restart Git Bash
+
+> `run.sh` also auto-detects `~/k6/k6.exe` if it's not in PATH.
+
+**Step 2: Clone and configure**
+```bash
+git clone https://github.com/gpadidala/grafana-k6-ui-tester.git
+cd grafana-k6-ui-tester
+cp .env.example .env
+```
+
+Edit `.env` (use `notepad .env` or `vi .env`):
+```
+GRAFANA_URL=https://your-grafana.example.com
+GRAFANA_TOKEN=glsa_your_token_here
+TEST_LEVEL=full
+```
+
+**Step 3: Run**
+```bash
+./run.sh
+```
+
+The HTML report auto-opens in your default browser. Results are saved in `reports/`.
+
+**What `run.sh` handles on Windows:**
+- Auto-finds k6 at `~/k6/k6.exe` (portable install)
+- Uses `python` instead of `python3` (Git Bash convention)
+- Falls back to `grep` if no Python is available
+- Opens report with `start` / `explorer.exe`
+- No `bc` dependency (uses integer math)
 
 ---
 
@@ -506,6 +568,8 @@ pipeline {
 | Problem | Solution |
 |---------|----------|
 | `./run.sh: No such file or directory` | Run `cd /path/to/grafana-k6-ui-tester` first, or use `bash run.sh` |
+| `k6: command not found` (Windows) | Install k6 portable: `mkdir ~/k6 && curl -sL .../k6.zip -o ~/k6/k6.zip` — see [Windows Setup](#windows-setup-git-bash--no-admin-required) |
+| `python3: not found` (Windows) | `run.sh` auto-falls back to `python` or `grep`. No action needed |
 | Podman: `podman-compose not found` | Install: `pip3 install podman-compose` |
 | Podman: image pull fails | Your registry may block Docker Hub. See [Podman with private registry](#podman-with-private-registry-corporateair-gapped) |
 | Podman: permission denied | Run `podman machine init && podman machine start` on macOS |
