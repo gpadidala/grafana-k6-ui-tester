@@ -1,0 +1,13 @@
+{
+  "name": "grafana-k6-ui-tester",
+  "version": "1.0.0",
+  "description": "Production-grade Grafana UI testing framework using k6 Browser automation",
+  "scripts": {
+    "test": "./run.sh",
+    "demo": "./demo-run.sh",
+    "discover": "k6 run scripts/discover.js"
+  },
+  "keywords": ["grafana", "k6", "testing", "browser", "automation", "ui-testing"],
+  "author": "Gopal Padidala",
+  "license": "MIT"
+}
