@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
+import AIAnalysis from '../components/AIAnalysis';
 import { getTestRuns } from '../api/store';
 import { TestRun } from '../types';
 
@@ -114,6 +115,9 @@ export default function HistoryPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="mt-4">
+                    <AIAnalysis run={run} />
                   </div>
                 </div>
               )}

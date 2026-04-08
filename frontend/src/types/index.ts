@@ -53,4 +53,10 @@ export interface CronJob {
   nextRun?: string;
 }
 
+export interface LLMConfig {
+  provider: 'openai' | 'claude' | 'none';
+  apiKey: string;
+  model: string;
+}
+
 export type Page = 'dashboard' | 'run-test' | 'history' | 'environments' | 'cron';

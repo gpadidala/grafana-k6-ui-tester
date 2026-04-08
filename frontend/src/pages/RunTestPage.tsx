@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
+import AIAnalysis from '../components/AIAnalysis';
 import { getEnvironments } from '../api/store';
 import { triggerTestRun } from '../api/runner';
 import { TestRun } from '../types';
@@ -219,6 +220,11 @@ export default function RunTestPage() {
             </div>
           )}
         </Card>
+      )}
+
+      {/* AI Analysis */}
+      {lastRun && lastRun.status !== 'running' && (
+        <AIAnalysis run={lastRun} />
       )}
     </div>
   );
