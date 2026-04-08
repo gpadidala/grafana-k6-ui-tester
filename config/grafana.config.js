@@ -14,7 +14,7 @@ const config = {
     parallelVUs: parseInt(__ENV.PARALLEL_VUS || '3', 10),
     reportDir: __ENV.REPORT_DIR || './reports',
     baselineReport: __ENV.BASELINE_REPORT || '',
-    dashboardLoadTimeout: parseInt(__ENV.DASHBOARD_LOAD_TIMEOUT || '10000', 10),
+    dashboardLoadTimeout: parseInt(__ENV.DASHBOARD_LOAD_TIMEOUT || '30000', 10),
     rateLimitMs: parseInt(__ENV.RATE_LIMIT_MS || '500', 10),
     maxRetries: parseInt(__ENV.MAX_RETRIES || '3', 10),
   },

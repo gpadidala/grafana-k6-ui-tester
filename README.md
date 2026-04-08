@@ -1,8 +1,30 @@
 # Grafana k6 UI Automation Testing Framework
 
-Production-grade UI testing framework for Grafana using k6 Browser (Chromium-based). Auto-discovers and validates all dashboards, alerts, datasources, and UI pages. Designed for Grafana version upgrade validation.
+Production-grade UI testing framework for Grafana using **k6 Browser** (Chromium-based). Auto-discovers and validates all dashboards, alerts, datasources, plugins, and admin pages. Designed for **Grafana version upgrade validation** and **continuous UI health monitoring**.
 
-## Quick Demo
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [What It Tests](#what-it-tests)
+- [How It Works](#how-it-works)
+- [User Guide](#user-guide)
+  - [Running the Demo](#running-the-demo)
+  - [Testing Your Own Grafana](#testing-your-own-grafana)
+  - [Understanding the Report](#understanding-the-report)
+  - [Reading Error Messages](#reading-error-messages)
+  - [Version Upgrade Workflow](#version-upgrade-workflow)
+- [Configuration](#configuration)
+- [Use Cases](#use-cases)
+- [Project Structure](#project-structure)
+- [CI/CD Integration](#cicd-integration)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+---
+
+## Quick Start
 
 ```bash
 git clone https://github.com/gpadidala/grafana-k6-ui-tester.git
@@ -10,55 +32,163 @@ cd grafana-k6-ui-tester
 ./demo-run.sh
 ```
 
-This spins up a local Grafana with 7 sample dashboards, runs the full test suite, and opens an interactive HTML report.
+This single command:
+1. Auto-installs k6 if missing (macOS/Linux/Windows)
+2. Builds a Grafana Docker image with **14 sample dashboards**
+3. Starts Grafana, waits until healthy
+4. Creates a service account token
+5. Runs the full browser test suite (**47 tests**)
+6. Opens an interactive HTML report in your browser
 
-## Features
+---
 
-- Auto-discovers all dashboards, alert rules, datasources, folders, and plugins via Grafana API
-- Tests every discovered dashboard for: page load, panel rendering, console errors, error banners, load time
-- Validates all core UI pages (home, explore, alerts, admin, plugins, etc.)
-- Interactive HTML report with donut chart, filterable table, and inline screenshots
-- Version upgrade comparison mode (baseline diff to catch regressions)
-- Docker-based demo environment with 7 realistic dashboards
-- Configurable test levels: smoke (5 items), standard (20), full (all)
-- CI/CD ready with exit code 1 on < 90% pass rate
+## What It Tests
 
-## Prerequisites
+The framework auto-discovers everything in your Grafana instance and tests it:
 
-- [k6](https://k6.io/docs/get-started/installation/) v0.50+ (with browser module)
-- [Docker](https://docs.docker.com/get-docker/) (for demo only)
-- Python 3 (for report parsing in shell scripts)
+| Category | What Gets Tested | Pass Criteria |
+|----------|-----------------|---------------|
+| **Dashboards** | Every dashboard: page load, panel rendering, panel errors, missing plugins, "no data" panels, error banners, time picker | Page loads, all panels healthy, no error banners |
+| **Alerts** | Alert rules list, each rule's edit page, silences, contact points, notification policies | All pages load within timeout |
+| **Datasources** | Datasource list, each datasource config page | Pages load, config accessible |
+| **Plugins** | Plugin list, top 10 plugin detail pages | All plugin pages render |
+| **Explore** | Explore page with datasource selector | Page loads, query editor visible |
+| **Users/Teams** | Admin users, org users, teams, profile page | Pages load or graceful 403 |
+| **Admin** | Organizations, server stats, server settings | Pages load or graceful 403 |
+| **Login** | Authentication flow, session validation | Successful login, session active |
 
-```bash
-# macOS
-brew install k6
+### Dashboard Panel-Level Testing
 
-# Linux
-sudo gpg -k
-sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
-echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-sudo apt-get update && sudo apt-get install k6
+For each dashboard, the framework inspects **every panel** individually:
+
+- **Healthy panels** — rendered correctly with data
+- **Error panels** — panels showing errors (query failures, timeout, etc.)
+- **Missing plugin panels** — "Panel plugin not found" errors
+- **No data panels** — panels displaying "No data" (datasource misconfigured)
+- **Error banners** — dashboard-level error messages
+
+```
+Example report output:
+  PASS  Infrastructure Overview    OK — 8 panels loaded, 8 healthy, load time 1205ms
+  FAIL  Application Metrics        2 panel(s) with errors: [Error Rate, API Latency] | 1 panel(s) showing "No data": [CPU Usage]
+  WARN  SLO Dashboard              3 panel(s) showing "No data": [Error Budget, SLI Trend, Compliance]
 ```
 
-## Usage
+---
 
-### Against any Grafana instance
+## How It Works
 
-```bash
-# Smoke test (5 dashboards)
-./run.sh --url https://grafana.example.com --token glsa_xxx --level smoke
-
-# Standard test (20 dashboards)
-./run.sh --url https://grafana.example.com --token glsa_xxx --level standard
-
-# Full test (all dashboards)
-./run.sh --url https://grafana.example.com --token glsa_xxx --level full
-
-# With baseline comparison
-./run.sh --url https://grafana.example.com --token glsa_xxx --level full --baseline ./reports/v10-baseline.json
+```
+                         Architecture
+┌──────────────────────────────────────────────────┐
+│                  demo-run.sh / run.sh            │
+│              (orchestrates everything)            │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│  Step 1: API Discovery (k6 HTTP)                 │
+│    ├── GET /api/health          → version        │
+│    ├── GET /api/search          → dashboards     │
+│    ├── GET /api/v1/provisioning → alert rules    │
+│    ├── GET /api/datasources     → datasources    │
+│    └── GET /api/plugins         → plugins        │
+│                                                  │
+│  Step 2: Browser Tests (k6 Chromium)             │
+│    ├── Phase 1: Login & Home                     │
+│    ├── Phase 2: All Dashboards (panel-level)     │
+│    ├── Phase 3: Alerts                           │
+│    ├── Phase 4: Explore & Datasources            │
+│    ├── Phase 5: Plugins                          │
+│    └── Phase 6: Users, Teams, Admin              │
+│                                                  │
+│  Step 3: Report Generation                       │
+│    ├── report.json   (machine-readable)          │
+│    ├── report.html   (interactive dashboard)     │
+│    └── screenshots/  (failure captures)          │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
-### With environment variables
+---
+
+## User Guide
+
+### Running the Demo
+
+The demo includes a pre-configured Grafana with **14 dashboards** across 4 categories:
+
+| Category | Dashboards |
+|----------|-----------|
+| **Infrastructure** | Infrastructure Overview, Network Traffic, Kubernetes Cluster |
+| **Application** | Application Metrics, Database Performance |
+| **Business** | Business KPIs, System Health |
+| **Observability-KPI** | App Overview (4 Signals), Loki Logs Deep Dive, Mimir Infrastructure, Pyroscope Profiling, SLO/SLI Dashboard, Tempo Tracing, User Journey |
+
+```bash
+# Run the full demo (builds Docker, tests, opens report)
+./demo-run.sh
+```
+
+**What you'll see in the terminal:**
+
+```
+╔══════════════════════════════════════════════╗
+║   Grafana k6 UI Tester — Demo Environment    ║
+╚══════════════════════════════════════════════╝
+
+Checking prerequisites...
+All prerequisites met
+
+[1/5] Building and starting Grafana...
+[2/5] Waiting for Grafana to be healthy...
+Grafana is ready! (6s)
+[3/5] Creating service account token...
+Token obtained
+[4/5] Running k6 test suite...
+
+╔══════════════════════════════════════════════╗
+║       GRAFANA UI TEST RESULTS SUMMARY        ║
+╠══════════════════════════════════════════════╣
+║  Grafana:    11.4.0                          ║
+║  Test Level: full                            ║
+║  Total Tests:  47                            ║
+║  Passed:       33                            ║
+║  Failed:       14                            ║
+║  Warnings:     0                             ║
+║  Pass Rate:    70.2%                         ║
+╚══════════════════════════════════════════════╝
+
+[5/5] Opening HTML report...
+```
+
+At the end, press **Enter** to tear down the demo or **Ctrl+C** to keep Grafana running at `http://localhost:3000` (login: `admin` / `admin`).
+
+---
+
+### Testing Your Own Grafana
+
+#### Option 1: Service Account Token (Recommended)
+
+1. In Grafana, go to **Administration > Service Accounts**
+2. Create a new service account with **Admin** role
+3. Generate a token
+4. Run:
+
+```bash
+./run.sh --url https://your-grafana.example.com \
+         --token glsa_your_token_here \
+         --level full
+```
+
+#### Option 2: Environment Variables
+
+```bash
+export GRAFANA_URL=https://your-grafana.example.com
+export GRAFANA_TOKEN=glsa_your_token_here
+export TEST_LEVEL=full
+./run.sh
+```
+
+#### Option 3: .env File
 
 ```bash
 cp .env.example .env
@@ -66,66 +196,200 @@ cp .env.example .env
 ./run.sh
 ```
 
+#### Test Levels
+
+| Level | Dashboards Tested | Use Case |
+|-------|------------------|----------|
+| `smoke` | First 5 | Quick health check (< 1 min) |
+| `standard` | First 20 | Regular validation (2-3 min) |
+| `full` | All discovered | Complete audit (5-10 min) |
+
+---
+
+### Understanding the Report
+
+The HTML report opens automatically after tests complete. It has several sections:
+
+#### 1. Summary Cards
+Shows total tests, passed, failed, warnings, and pass rate at a glance with a donut chart.
+
+#### 2. Verdict Banner
+- **Green "PASSED"** — 90%+ pass rate, your Grafana is healthy
+- **Red "FAILED"** — Below 90% pass rate, investigate the failures
+
+#### 3. Category Badges
+Quick breakdown by category (e.g., `dashboards: 12/14`, `plugins: 11/11`)
+
+#### 4. Results Table
+Every test result with:
+
+| Column | Description |
+|--------|-------------|
+| **#** | Test number |
+| **Category** | dashboards, alerts, plugins, etc. |
+| **Name** | Clickable link — opens the item directly in Grafana |
+| **UID** | Grafana unique identifier |
+| **Status** | PASS (green), FAIL (red), WARN (yellow) |
+| **Load Time** | How long the page took to load |
+| **Error** | Detailed error message explaining what went wrong |
+| **Grafana** | "Open" link — click to jump to that page in Grafana |
+| **Screenshot** | Failure screenshot (if available) |
+
+Use the **search box** and **filter dropdowns** to find specific results.
+
+---
+
+### Reading Error Messages
+
+Every test result includes a human-readable error message:
+
+#### Success Messages
+```
+OK — loaded in 1205ms
+OK — 8 panels loaded, 8 healthy, load time 1205ms
+OK — authenticated successfully, session active
+OK — access denied (HTTP 403), requires elevated permissions
+```
+
+#### Dashboard Panel Failures
+```
+2 panel(s) with errors: [Error Rate Panel, API Latency Panel]
+1 panel(s) missing plugin: [Custom Viz Plugin]
+3 panel(s) showing "No data": [CPU Usage, Memory, Disk]
+Page error banner: Dashboard not found
+No panels found on dashboard — it may be empty or failed to render
+```
+
+#### Page Load Failures
+```
+Page /alerting/silences failed (HTTP timeout). Verify page exists and Grafana is responsive.
+Page /admin/settings failed (HTTP 500). Verify page exists and Grafana is responsive.
+Dashboard failed to load (HTTP timeout). The page at /d/my-dashboard returned an error or timed out.
+```
+
+#### Authentication Failures
+```
+Authentication failed — browser was redirected to /login. Check credentials or anonymous access config.
+```
+
+---
+
+### Version Upgrade Workflow
+
+The primary use case — validate Grafana before and after an upgrade:
+
+**Step 1: Baseline (before upgrade)**
+```bash
+./run.sh --url https://grafana.example.com --token xxx --level full
+cp reports/report.json reports/v10-baseline.json
+```
+
+**Step 2: Upgrade Grafana**
+
+**Step 3: Post-upgrade test with comparison**
+```bash
+./run.sh --url https://grafana.example.com --token xxx --level full \
+         --baseline reports/v10-baseline.json
+```
+
+**Step 4: Review the comparison report**
+
+The HTML report will include a **Version Upgrade Comparison** section showing:
+- **Regressions** — dashboards that passed before but fail now
+- **Resolved** — dashboards that failed before but pass now
+- **New tests** — dashboards added since the baseline
+- Dashboard count change
+
+---
+
 ## Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GRAFANA_URL` | `http://localhost:3000` | Grafana instance URL |
-| `GRAFANA_TOKEN` | _(required)_ | Service Account token |
+| `GRAFANA_TOKEN` | _(empty)_ | Service Account token (or use anonymous access) |
 | `GRAFANA_ORG_ID` | `1` | Organization ID |
 | `TEST_LEVEL` | `standard` | `smoke` / `standard` / `full` |
 | `SCREENSHOT_ON_FAIL` | `true` | Capture screenshots on failure |
 | `HEADLESS` | `true` | Run browser headless |
-| `PARALLEL_VUS` | `3` | Parallel virtual users |
 | `REPORT_DIR` | `./reports` | Output directory |
 | `BASELINE_REPORT` | _(empty)_ | Path to baseline JSON for comparison |
-| `DASHBOARD_LOAD_TIMEOUT` | `10000` | Max dashboard load time (ms) |
+| `DASHBOARD_LOAD_TIMEOUT` | `30000` | Max dashboard load time (ms) |
+| `RATE_LIMIT_MS` | `500` | Delay between page navigations (ms) |
+| `MAX_RETRIES` | `3` | Retry count for failed navigations |
+
+---
+
+## Use Cases
+
+### 1. Grafana Version Upgrade Validation
+Run the test suite before and after upgrading Grafana. Compare reports to catch regressions — dashboards that break, plugins that go missing, or pages that stop loading.
+
+### 2. Dashboard Health Monitoring
+Schedule regular runs to detect dashboard issues early — broken panels, missing datasources, plugin errors. Each dashboard is tested at the panel level.
+
+### 3. New Dashboard Deployment Verification
+After deploying new dashboards (via provisioning or API), run the test suite to verify they load correctly, all panels render, and no errors appear.
+
+### 4. Alerting Configuration Validation
+Tests every alert rule's edit page, silences, contact points, and notification policies. Catches configuration issues before they affect incident response.
+
+### 5. Plugin Compatibility Check
+After installing or updating plugins, verify all plugin pages load and existing dashboards using those plugins still render.
+
+### 6. Access Control Testing
+Detects permission issues — pages returning 403 are reported as graceful denials. Token-based or anonymous access configurations are validated.
+
+### 7. CI/CD Pipeline Integration
+Run as a gate in deployment pipelines to prevent broken Grafana configs from reaching production.
+
+---
 
 ## Project Structure
 
 ```
 grafana-k6-ui-tester/
-├── config/grafana.config.js       # Configuration loader
+├── config/
+│   └── grafana.config.js             # Configuration from env vars
 ├── lib/
-│   ├── grafana-api.js             # Grafana HTTP API client
-│   ├── browser-utils.js           # Browser automation helpers
-│   └── reporter.js                # HTML/JSON report generator
-├── tests/
-│   ├── 01-login.test.js           # Authentication tests
-│   ├── 02-home.test.js            # Home page & navigation
-│   ├── 03-dashboards.test.js      # Dashboard iteration (critical)
-│   ├── 04-alerts.test.js          # Alert rules & silences
-│   ├── 05-explore.test.js         # Explore page
-│   ├── 06-datasources.test.js     # Datasource configs
-│   ├── 07-users-teams.test.js     # User management
-│   ├── 08-plugins.test.js         # Plugin pages
-│   └── 09-admin.test.js           # Admin pages
-├── scenarios/full-suite.js        # Test orchestrator
-├── scripts/discover.js            # API discovery
-├── demo/                          # Docker demo environment
-│   ├── dashboards/                # 7 sample dashboards
-│   ├── provisioning/              # Grafana provisioning configs
-│   └── setup-service-account.sh   # Token generator
-├── Dockerfile                     # Grafana demo image
-├── docker-compose.yml
-├── demo-run.sh                    # One-command demo
-├── run.sh                         # Test runner
-└── reports/                       # Generated outputs
+│   ├── grafana-api.js                # HTTP API discovery client
+│   ├── browser-utils.js              # Browser automation + panel inspection
+│   └── reporter.js                   # HTML/JSON report generator with deep links
+├── tests/                            # Individual test modules
+│   ├── 01-login.test.js              # Authentication tests
+│   ├── 02-home.test.js               # Home page & navigation
+│   ├── 03-dashboards.test.js         # Dashboard iteration (per-panel)
+│   ├── 04-alerts.test.js             # Alert rules & silences
+│   ├── 05-explore.test.js            # Explore page
+│   ├── 06-datasources.test.js        # Datasource configs
+│   ├── 07-users-teams.test.js        # User management
+│   ├── 08-plugins.test.js            # Plugin pages
+│   └── 09-admin.test.js              # Admin pages
+├── scenarios/
+│   └── full-suite.js                 # Test orchestrator (all phases)
+├── scripts/
+│   └── discover.js                   # Standalone API discovery
+├── demo/
+│   ├── dashboards/                   # 7 sample demo dashboards
+│   ├── provisioning/                 # Grafana provisioning configs
+│   │   ├── dashboards/               # Dashboard providers
+│   │   ├── datasources/              # TestData datasource
+│   │   └── alerting/                 # 5 sample alert rules
+│   └── setup-service-account.sh      # Token generator script
+├── observability-dashboards/          # 7 Observability-KPI dashboards
+├── Dockerfile                        # Grafana demo image (14 dashboards)
+├── docker-compose.yml                # Docker Compose config
+├── demo-run.sh                       # One-command demo runner
+├── run.sh                            # Test runner CLI
+├── .env.example                      # Environment variable template
+└── reports/                          # Generated outputs
+    ├── report.html                   # Interactive HTML report
+    ├── report.json                   # Machine-readable results
+    ├── manifest.json                 # Discovery results
+    └── screenshots/                  # Failure screenshots
 ```
 
-## Test Coverage
-
-| Test File | What It Tests |
-|-----------|--------------|
-| 01-login | Login page render, authentication, session validation |
-| 02-home | Home page, navigation sidebar, top bar |
-| 03-dashboards | **Every dashboard**: load, panels, errors, timing, screenshots |
-| 04-alerts | Alert rules list, detail pages, silences, contact points |
-| 05-explore | Explore page, datasource selector, query editor |
-| 06-datasources | Datasource list, each config page |
-| 07-users-teams | Admin users, org users, teams, profile |
-| 08-plugins | Plugin list, each plugin detail page |
-| 09-admin | Server orgs, stats, settings (graceful 403 skip) |
+---
 
 ## CI/CD Integration
 
@@ -144,12 +408,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: grafana/setup-k6-action@v1
-      - name: Run tests
-        run: ./run.sh --url ${{ secrets.GRAFANA_URL }} --token ${{ secrets.GRAFANA_TOKEN }} --level full
+      - name: Run UI tests
+        run: |
+          ./run.sh --url ${{ secrets.GRAFANA_URL }} \
+                   --token ${{ secrets.GRAFANA_TOKEN }} \
+                   --level full
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-reports
+          name: grafana-ui-test-report
           path: reports/
 ```
 
@@ -164,24 +431,72 @@ grafana-ui-test:
     when: always
     paths:
       - reports/
+    expire_in: 30 days
 ```
 
-## Version Upgrade Workflow
+### Jenkins
 
-1. Run tests against current version, save as baseline:
-   ```bash
-   ./run.sh --url https://grafana.example.com --token xxx --level full
-   cp reports/report.json reports/v10-baseline.json
-   ```
+```groovy
+pipeline {
+    agent any
+    stages {
+        stage('Grafana UI Tests') {
+            steps {
+                sh './run.sh --url ${GRAFANA_URL} --token ${GRAFANA_TOKEN} --level full'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'reports/**'
+                    publishHTML(target: [
+                        reportDir: 'reports',
+                        reportFiles: 'report.html',
+                        reportName: 'Grafana UI Test Report'
+                    ])
+                }
+            }
+        }
+    }
+}
+```
 
-2. Upgrade Grafana
+---
 
-3. Run tests with baseline comparison:
-   ```bash
-   ./run.sh --url https://grafana.example.com --token xxx --level full --baseline reports/v10-baseline.json
-   ```
+## Troubleshooting
 
-4. Check HTML report for regressions (dashboards that passed before but fail now)
+| Problem | Solution |
+|---------|----------|
+| `./run.sh: No such file or directory` | Run `cd /path/to/grafana-k6-ui-tester` first, or use `bash run.sh` |
+| `k6 is required` | Install: `brew install k6` (macOS) or see [k6 install docs](https://grafana.com/docs/k6/latest/set-up/install-k6/) |
+| `connection refused` | Ensure Grafana is running and accessible at the specified URL |
+| All dashboards show "No data" panels | Expected in demo mode — TestData datasource generates random data, not real metrics |
+| Pages timing out | Increase `DASHBOARD_LOAD_TIMEOUT` (default 30s). Some pages need longer for `networkidle` |
+| Authentication failures | Verify your service account token has **Admin** role, or enable anonymous access for testing |
+| `getcwd: cannot access parent directories` | Your terminal directory is stale. Run `cd /path/to/grafana-k6-ui-tester` to reset |
+
+---
+
+## Prerequisites
+
+- **[k6](https://k6.io/docs/get-started/installation/)** v0.50+ (with browser module)
+- **[Docker](https://docs.docker.com/get-docker/)** (for demo only)
+- **Python 3** (for report parsing in shell scripts)
+
+```bash
+# macOS
+brew install k6
+
+# Linux (Debian/Ubuntu)
+sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+  --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
+  sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update && sudo apt-get install k6
+
+# Windows
+choco install k6
+```
+
+---
 
 ## License
 

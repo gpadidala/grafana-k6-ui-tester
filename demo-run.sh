@@ -26,8 +26,70 @@ if ! command -v docker &>/dev/null; then
 fi
 
 if ! command -v k6 &>/dev/null; then
-  echo -e "${RED}ERROR: k6 is required. Install: brew install k6${NC}"
-  exit 1
+  echo -e "${YELLOW}k6 not found. Attempting auto-install...${NC}"
+  OS="$(uname -s)"
+  ARCH="$(uname -m)"
+
+  if [ "$OS" = "Darwin" ]; then
+    if command -v brew &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via Homebrew...${NC}"
+      brew install k6
+    else
+      echo -e "${RED}ERROR: k6 is required. Install Homebrew first (https://brew.sh) then run: brew install k6${NC}"
+      exit 1
+    fi
+  elif [ "$OS" = "Linux" ]; then
+    if command -v apt-get &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via apt...${NC}"
+      sudo gpg -k >/dev/null 2>&1 || true
+      sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+        --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68 2>/dev/null
+      echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
+        sudo tee /etc/apt/sources.list.d/k6.list >/dev/null
+      sudo apt-get update -qq && sudo apt-get install -y k6
+    elif command -v yum &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via yum...${NC}"
+      sudo yum install -y https://dl.k6.io/rpm/repo.rpm 2>/dev/null || true
+      sudo yum install -y k6
+    elif command -v dnf &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via dnf...${NC}"
+      sudo dnf install -y https://dl.k6.io/rpm/repo.rpm 2>/dev/null || true
+      sudo dnf install -y k6
+    else
+      # Fallback: download binary
+      echo -e "${BLUE}Installing k6 binary for Linux ($ARCH)...${NC}"
+      case "$ARCH" in
+        x86_64|amd64) K6_ARCH="amd64" ;;
+        aarch64|arm64) K6_ARCH="arm64" ;;
+        *) echo -e "${RED}ERROR: Unsupported architecture: $ARCH${NC}"; exit 1 ;;
+      esac
+      K6_VERSION=$(curl -sL https://api.github.com/repos/grafana/k6/releases/latest | grep tag_name | cut -d'"' -f4)
+      curl -sL "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-${K6_ARCH}.tar.gz" | tar xz
+      sudo mv k6-${K6_VERSION}-linux-${K6_ARCH}/k6 /usr/local/bin/k6
+      rm -rf k6-${K6_VERSION}-linux-${K6_ARCH}
+    fi
+  elif [[ "$OS" == MINGW* || "$OS" == MSYS* || "$OS" == CYGWIN* ]]; then
+    if command -v choco &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via Chocolatey...${NC}"
+      choco install k6 -y
+    elif command -v winget &>/dev/null; then
+      echo -e "${BLUE}Installing k6 via winget...${NC}"
+      winget install k6 --accept-source-agreements --accept-package-agreements
+    else
+      echo -e "${RED}ERROR: k6 is required. Install via https://dl.k6.io/msi/k6-latest-amd64.msi${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${RED}ERROR: Unsupported OS ($OS). Install k6 manually: https://grafana.com/docs/k6/latest/set-up/install-k6/${NC}"
+    exit 1
+  fi
+
+  # Verify installation succeeded
+  if ! command -v k6 &>/dev/null; then
+    echo -e "${RED}ERROR: k6 installation failed. Install manually: https://grafana.com/docs/k6/latest/set-up/install-k6/${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}k6 installed successfully$(k6 version 2>/dev/null && echo " — $(k6 version)" || true)${NC}"
 fi
 
 COMPOSE_CMD="docker compose"
