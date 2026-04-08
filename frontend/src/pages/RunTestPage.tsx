@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import AIAnalysis from '../components/AIAnalysis';
-import { CATEGORY_ICONS } from '../components/Sidebar';
+// Icons come from backend categories now
 import { getEnvironments } from '../api/store';
 import { runTests, getCategories, CategoryInfo } from '../api/runner';
 
@@ -136,24 +136,128 @@ export default function RunTestPage() {
         </div>
       </Card>
 
-      {/* Live Progress */}
-      {progress.length > 0 && running && (
-        <Card>
-          <h3 className="font-semibold text-white mb-3">Live Progress</h3>
-          <div className="space-y-1.5">
-            {progress.filter(p => p.type === 'category_start' || p.type === 'category_done').map((p, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
-                <span>{p.icon || CATEGORY_ICONS[p.categoryId] || '🔹'}</span>
-                <span className="text-white">{p.categoryName || p.categoryId}</span>
-                {p.type === 'category_start' && <span className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />}
-                {p.type === 'category_done' && <StatusBadge status={p.result?.status || 'PASS'} />}
-                {p.type === 'category_done' && p.result?.summary && (
-                  <span className="text-xs text-muted">{p.result.summary.passed}/{p.result.summary.total} passed</span>
-                )}
+      {/* Live Status Board + Log Stream */}
+      {(running || progress.length > 0) && !report && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Category Status Board */}
+          <Card>
+            <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+              {running && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />}
+              Category Status
+            </h3>
+            <div className="space-y-1">
+              {(selectedCats.length > 0 ? categories.filter(c => selectedCats.includes(c.id)) : categories).map(cat => {
+                const started = progress.some(p => p.categoryId === cat.id && p.type === 'category_start');
+                const done = progress.find(p => p.categoryId === cat.id && p.type === 'category_done');
+                const testCount = progress.filter(p => p.categoryId === cat.id && p.type === 'test_result').length;
+                let statusIcon = '⏳';
+                let statusColor = 'text-gray-500';
+                if (done) {
+                  statusIcon = done.result?.status === 'PASS' ? '✅' : done.result?.status === 'WARN' ? '⚠️' : '❌';
+                  statusColor = done.result?.status === 'PASS' ? 'text-green-400' : done.result?.status === 'WARN' ? 'text-yellow-400' : 'text-red-400';
+                } else if (started) {
+                  statusIcon = '🔄';
+                  statusColor = 'text-blue-400';
+                }
+
+                return (
+                  <div key={cat.id} className={`flex items-center justify-between py-1.5 px-2 rounded ${started && !done ? 'bg-blue-900/20 border border-blue-800/30' : ''}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{cat.icon}</span>
+                      <span className={`text-sm ${done ? 'text-white' : started ? 'text-blue-300' : 'text-gray-500'}`}>{cat.name}</span>
+                      {started && !done && <span className="w-3 h-3 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {testCount > 0 && <span className="text-xs text-muted">{testCount} tests</span>}
+                      {done?.result?.summary && (
+                        <span className="text-xs">
+                          <span className="text-green-400">{done.result.summary.passed}</span>
+                          {done.result.summary.failed > 0 && <span className="text-red-400">/{done.result.summary.failed}F</span>}
+                          {done.result.summary.warnings > 0 && <span className="text-yellow-400">/{done.result.summary.warnings}W</span>}
+                        </span>
+                      )}
+                      <span className={`text-sm ${statusColor}`}>{statusIcon}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Running totals */}
+            {progress.some(p => p.type === 'category_done') && (
+              <div className="mt-3 pt-3 border-t border-surface-300 flex gap-4 text-xs">
+                <span className="text-muted">
+                  {progress.filter(p => p.type === 'category_done').length}/{selectedCats.length || categories.length} categories
+                </span>
+                <span className="text-green-400">
+                  {progress.filter(p => p.type === 'test_result' && p.test?.status === 'PASS').length} passed
+                </span>
+                <span className="text-red-400">
+                  {progress.filter(p => p.type === 'test_result' && p.test?.status === 'FAIL').length} failed
+                </span>
+                <span className="text-yellow-400">
+                  {progress.filter(p => p.type === 'test_result' && p.test?.status === 'WARN').length} warnings
+                </span>
               </div>
-            ))}
-          </div>
-        </Card>
+            )}
+          </Card>
+
+          {/* Live Log Stream */}
+          <Card className="max-h-[450px] flex flex-col">
+            <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+              📜 Live Logs
+              <span className="text-xs text-muted font-normal">
+                {progress.filter(p => p.type === 'test_result').length} events
+              </span>
+            </h3>
+            <div className="flex-1 overflow-y-auto space-y-0.5 font-mono text-xs" id="log-stream">
+              {progress.map((p, i) => {
+                if (p.type === 'category_start') {
+                  return (
+                    <div key={i} className="flex items-center gap-1.5 py-1 text-blue-300 border-t border-surface-300/30 mt-1 pt-1">
+                      <span>{p.icon}</span>
+                      <span className="font-semibold">▶ {p.categoryName}</span>
+                      <span className="text-muted">starting...</span>
+                    </div>
+                  );
+                }
+                if (p.type === 'test_result') {
+                  const st = p.test?.status;
+                  const icon = st === 'PASS' ? '✓' : st === 'FAIL' ? '✗' : '⚠';
+                  const color = st === 'PASS' ? 'text-green-400' : st === 'FAIL' ? 'text-red-400' : 'text-yellow-400';
+                  return (
+                    <div key={i} className="flex items-start gap-1.5 py-0.5 hover:bg-surface-200 px-1 rounded">
+                      <span className={`${color} w-3 shrink-0`}>{icon}</span>
+                      <span className="text-gray-300 truncate">{p.test?.name}</span>
+                      {p.test?.ms && <span className="text-gray-600 shrink-0">{p.test.ms}ms</span>}
+                      {p.test?.detail && st !== 'PASS' && (
+                        <span className="text-gray-500 truncate ml-auto max-w-[200px]">{p.test.detail}</span>
+                      )}
+                    </div>
+                  );
+                }
+                if (p.type === 'category_done') {
+                  const s = p.result?.summary;
+                  const st = p.result?.status;
+                  const color = st === 'PASS' ? 'text-green-400' : st === 'FAIL' ? 'text-red-400' : 'text-yellow-400';
+                  return (
+                    <div key={i} className={`flex items-center gap-1.5 py-1 ${color} border-b border-surface-300/30 mb-1 pb-1`}>
+                      <span>{p.result?.icon || p.icon}</span>
+                      <span className="font-semibold">■ {p.categoryName || p.categoryId}</span>
+                      {s && <span className="text-muted">{s.passed}/{s.total} passed</span>}
+                    </div>
+                  );
+                }
+                return null;
+              })}
+              {running && (
+                <div className="flex items-center gap-1.5 py-1 text-muted animate-pulse">
+                  <span className="w-1.5 h-1.5 bg-accent rounded-full" />
+                  <span>waiting...</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Results */}

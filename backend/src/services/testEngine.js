@@ -58,6 +58,15 @@ class TestEngine {
 
       try {
         const testResults = await cat.runner(client);
+
+        // Emit each individual test result
+        for (const t of testResults) {
+          if (onProgress) onProgress({
+            type: 'test_result', categoryId: catId, categoryName: cat.name, icon: cat.icon,
+            test: { name: t.name, status: t.status, detail: t.detail, uid: t.uid, ms: t.ms },
+          });
+        }
+
         const passed = testResults.filter(r => r.status === 'PASS').length;
         const failed = testResults.filter(r => r.status === 'FAIL').length;
         const warns = testResults.filter(r => r.status === 'WARN').length;
@@ -72,8 +81,6 @@ class TestEngine {
         };
 
         report.categories.push(catResult);
-
-        // Update totals
         report.summary.total += testResults.length;
         report.summary.passed += passed;
         report.summary.failed += failed;
