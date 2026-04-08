@@ -7,6 +7,7 @@ Production-grade UI testing framework for Grafana using **k6 Browser** (Chromium
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Web Frontend](#web-frontend)
 - [What It Tests](#what-it-tests)
 - [How It Works](#how-it-works)
 - [User Guide](#user-guide)
@@ -40,6 +41,77 @@ This single command:
 4. Creates a service account token
 5. Runs the full browser test suite (**47 tests**)
 6. Opens an interactive HTML report in your browser
+
+---
+
+---
+
+## Web Frontend
+
+A zero-dependency dark-theme SPA served by an Express server on **port 8080**. No build step required — pure HTML, CSS, and vanilla JS.
+
+### Start the dashboard
+
+```bash
+# Install Express (once)
+npm run frontend:install
+
+# Start on http://localhost:8080
+npm run frontend
+```
+
+Or run directly:
+
+```bash
+cd frontend
+npm install
+node server.js
+# → http://localhost:8080
+```
+
+### Environment variables
+
+| Variable      | Default                   | Description                              |
+|---------------|---------------------------|------------------------------------------|
+| `PORT`        | `8080`                    | Port for the Express server              |
+| `API_BACKEND` | `http://localhost:4000`   | URL of the k6 backend API server         |
+
+### Pages
+
+| Page            | Description                                                         |
+|-----------------|---------------------------------------------------------------------|
+| **Dashboard**   | Overview stats, environment status cards, recent run history        |
+| **Run Tests**   | Select environment + test level, trigger a k6 run with live progress|
+| **Reports**     | Searchable / filterable run history with per-test drill-down        |
+| **Environments**| Configure DEV / PERF / PROD Grafana URLs, tokens, and LLM settings |
+| **Schedules**   | Create and manage cron-based scheduled test runs                    |
+
+### Architecture
+
+```
+Browser → http://localhost:8080
+           │
+           ├── GET /          → frontend/public/index.html  (SPA shell)
+           ├── GET /styles.css→ frontend/public/styles.css
+           ├── GET /app.js    → frontend/public/app.js
+           └── POST /api/run  → proxied to http://localhost:4000/api/run
+                                 (k6 runner backend)
+```
+
+State (environments, test history, schedules) is persisted in browser `localStorage`.
+When the backend is unreachable, test runs are simulated client-side so the UI remains fully functional.
+
+### Frontend file layout
+
+```
+frontend/
+├── public/
+│   ├── index.html   # SPA shell — sidebar + all 5 pages
+│   ├── styles.css   # Dark theme CSS (CSS custom properties)
+│   └── app.js       # All SPA logic, routing, API calls
+├── server.js        # Express — serves public/ + proxies /api/*
+└── src/             # React source (alternative TypeScript frontend)
+```
 
 ---
 

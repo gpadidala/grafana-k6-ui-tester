@@ -5,7 +5,9 @@
   "scripts": {
     "test": "./run.sh",
     "demo": "./demo-run.sh",
-    "discover": "k6 run scripts/discover.js"
+    "discover": "k6 run scripts/discover.js",
+    "frontend": "cd frontend && npm run server",
+    "frontend:install": "cd frontend && npm install"
   },
   "keywords": ["grafana", "k6", "testing", "browser", "automation", "ui-testing"],
   "author": "Gopal Padidala",

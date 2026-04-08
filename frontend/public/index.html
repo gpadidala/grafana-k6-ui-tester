@@ -1,38 +1,225 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0f1419" />
-    <meta name="description" content="Grafana k6 UI Tester — Dashboard by Gopal Rao" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              surface: { DEFAULT: '#0f1419', 100: '#1a1f2e', 200: '#232a3b', 300: '#2d3748' },
-              accent: { DEFAULT: '#3b82f6', hover: '#60a5fa', muted: '#1e3a5f' },
-              success: '#22c55e',
-              danger: '#ef4444',
-              warning: '#eab308',
-              muted: '#8899a6',
-            }
-          }
-        }
-      }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <title>Grafana k6 UI Tester</title>
-  </head>
-  <body class="bg-surface text-gray-200">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grafana k6 UI Tester</title>
+  <meta name="description" content="Grafana k6 UI Tester — browser-based dashboard by Gopal Rao" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <h1>Grafana k6<br>UI Tester</h1>
+    <p>by Gopal Rao</p>
+  </div>
+  <nav id="nav"></nav>
+  <div class="sidebar-footer">v1.0.0</div>
+</aside>
+
+<main id="main">
+
+  <!-- ── Dashboard ─────────────────────────────────────── -->
+  <div id="page-dashboard" class="page">
+    <div class="page-header">
+      <h2 class="page-title">Dashboard</h2>
+      <span id="dash-last-run" class="text-muted text-sm"></span>
+    </div>
+    <div class="grid-4" id="dash-stats"></div>
+    <div class="grid-3 mb-6" id="dash-envs"></div>
+    <div class="card section">
+      <div class="card-title">Recent Runs</div>
+      <div id="dash-recent"></div>
+    </div>
+    <div class="card section hidden" id="dash-cron-section">
+      <div class="card-title">Active Schedules</div>
+      <div id="dash-cron-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Run Tests ──────────────────────────────────────── -->
+  <div id="page-run-test" class="page">
+    <h2 class="page-title">Run Tests</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Configure Test Run</div>
+        <div class="form-group">
+          <label>Environment</label>
+          <div class="select-group" id="run-env-pills"></div>
+        </div>
+        <div class="form-group">
+          <label>Test Level</label>
+          <div class="select-group">
+            <button class="select-pill" data-level="smoke">Smoke <span class="text-muted">(~1 min)</span></button>
+            <button class="select-pill selected" data-level="standard">Standard <span class="text-muted">(~3 min)</span></button>
+            <button class="select-pill" data-level="full">Full <span class="text-muted">(~10 min)</span></button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg w-full mt-4" id="run-btn">▶ Run Tests</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Status</div>
+        <div id="run-idle-msg" class="text-muted text-sm">Select an environment and click Run Tests to start.</div>
+        <div id="run-active" class="hidden">
+          <div class="run-status-box">
+            <div class="status-text">
+              <span class="pulse" id="run-pulse"></span>
+              <span id="run-status-text">Running tests…</span>
+            </div>
+            <p class="text-muted text-sm" id="run-env-label"></p>
+            <div class="progress-bar mt-4">
+              <div class="progress-fill" id="run-progress" style="width:0%"></div>
+            </div>
+            <p class="text-muted text-sm" id="run-progress-text">Initializing…</p>
+          </div>
+        </div>
+        <div id="run-result" class="hidden mt-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Reports / History ─────────────────────────────── -->
+  <div id="page-history" class="page">
+    <div class="page-header">
+      <h2 class="page-title">Reports</h2>
+      <div class="flex gap-2">
+        <input type="text" id="history-search" placeholder="Search runs…" style="width:200px" />
+        <select id="history-filter" style="width:140px">
+          <option value="">All statuses</option>
+          <option value="passed">Passed</option>
+          <option value="failed">Failed</option>
+          <option value="running">Running</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div id="history-table-wrap"></div>
+    </div>
+    <div id="history-detail" class="hidden mt-4">
+      <div class="card">
+        <div class="card-title flex justify-between items-center">
+          <span id="history-detail-title">Test Results</span>
+          <button class="btn btn-ghost btn-sm" onclick="closeHistoryDetail()">✕ Close</button>
+        </div>
+        <div id="history-detail-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Environments ───────────────────────────────────── -->
+  <div id="page-environments" class="page">
+    <div class="page-header">
+      <h2 class="page-title">Environments</h2>
+      <button class="btn btn-primary btn-sm" id="env-add-btn">+ Add Environment</button>
+    </div>
+    <div class="grid-3 mb-4" id="env-list"></div>
+
+    <div class="card" id="env-llm-card">
+      <div class="card-title">AI Analysis (LLM)</div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Provider</label>
+          <select id="llm-provider">
+            <option value="none">Disabled</option>
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude (Anthropic)</option>
+          </select>
+        </div>
+        <div class="form-group" id="llm-model-group">
+          <label>Model</label>
+          <input type="text" id="llm-model" placeholder="e.g. gpt-4o or claude-sonnet-4-6" />
+        </div>
+      </div>
+      <div class="form-group" id="llm-key-group">
+        <label>API Key</label>
+        <input type="password" id="llm-key" placeholder="sk-…" />
+      </div>
+      <button class="btn btn-primary" id="llm-save-btn">Save LLM Config</button>
+    </div>
+  </div>
+
+  <!-- ── Schedules ──────────────────────────────────────── -->
+  <div id="page-cron" class="page">
+    <div class="page-header">
+      <h2 class="page-title">Schedules</h2>
+      <button class="btn btn-primary btn-sm" id="cron-add-btn">+ Add Schedule</button>
+    </div>
+    <div class="space-y" id="cron-list">
+      <p class="text-muted">No schedules configured.</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Modals ─────────────────────────────────────────── -->
+<div id="modal-env" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3 class="modal-title" id="env-modal-title">Add Environment</h3>
+    <input type="hidden" id="env-modal-id" />
+    <div class="form-group">
+      <label>Environment Name</label>
+      <input type="text" id="env-modal-name" placeholder="e.g. PRODUCTION" />
+    </div>
+    <div class="form-group">
+      <label>Label</label>
+      <input type="text" id="env-modal-label" placeholder="e.g. Production Instance" />
+    </div>
+    <div class="form-group">
+      <label>Grafana URL</label>
+      <input type="url" id="env-modal-url" placeholder="https://grafana.example.com" />
+    </div>
+    <div class="form-group">
+      <label>Service Account Token</label>
+      <input type="password" id="env-modal-token" placeholder="glsa_…" />
+    </div>
+    <div class="form-group">
+      <label>Color</label>
+      <input type="color" id="env-modal-color" value="#3b82f6" style="height:38px;padding:4px" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEnvModal()">Cancel</button>
+      <button class="btn btn-primary" id="env-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-cron" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3 class="modal-title" id="cron-modal-title">Add Schedule</h3>
+    <input type="hidden" id="cron-modal-id" />
+    <div class="form-group">
+      <label>Environment</label>
+      <select id="cron-modal-env"></select>
+    </div>
+    <div class="form-group">
+      <label>Cron Expression</label>
+      <input type="text" id="cron-modal-schedule" placeholder="0 * * * *" />
+      <p class="text-muted text-sm mt-2">
+        Examples: <code>0 * * * *</code> (hourly) · <code>0 6 * * 1</code> (Mon 6am) · <code>*/30 * * * *</code> (every 30m)
+      </p>
+    </div>
+    <div class="form-group">
+      <label>Test Level</label>
+      <select id="cron-modal-level">
+        <option value="smoke">smoke</option>
+        <option value="standard" selected>standard</option>
+        <option value="full">full</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCronModal()">Cancel</button>
+      <button class="btn btn-primary" id="cron-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<script src="app.js"></script>
+</body>
 </html>
