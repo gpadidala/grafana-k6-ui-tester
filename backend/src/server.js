@@ -100,6 +100,14 @@ app.get('/api/reports/:file', (req, res) => {
   res.json(report);
 });
 
+// Serve HTML report
+app.get('/api/reports/html/:file', (req, res) => {
+  const filepath = require('path').join(__dirname, '../reports', req.params.file);
+  if (!require('fs').existsSync(filepath)) return res.status(404).send('Report not found');
+  res.setHeader('Content-Type', 'text/html');
+  res.sendFile(filepath);
+});
+
 // Delete single report
 app.delete('/api/reports/:file', (req, res) => {
   const ok = engine.deleteReport(req.params.file);

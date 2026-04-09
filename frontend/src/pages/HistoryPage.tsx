@@ -4,8 +4,11 @@ import StatusBadge from '../components/StatusBadge';
 import AIAnalysis from '../components/AIAnalysis';
 import { getReports, getReport, deleteReport, deleteAllReports } from '../api/runner';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+
 interface ReportSummary {
   file: string;
+  htmlFile?: string | null;
   id: string;
   status: string;
   startedAt: string;
@@ -148,6 +151,13 @@ export default function HistoryPage() {
               <div className="text-right">
                 <p className="text-xs text-muted">{rpt.startedAt ? new Date(rpt.startedAt).toLocaleString() : '-'}</p>
               </div>
+              {rpt.htmlFile && (
+                <a href={`${API_BASE}/api/reports/html/${rpt.htmlFile}`} target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="px-2 py-1 text-xs bg-accent/20 hover:bg-accent/30 text-accent rounded transition" title="Open HTML report">
+                  📄 HTML
+                </a>
+              )}
               <button onClick={(e) => { e.stopPropagation(); handleDeleteOne(rpt.file); }}
                 className="text-red-500/50 hover:text-red-400 text-sm transition p-1" title="Delete report">
                 🗑️
