@@ -1,0 +1,17 @@
+{
+  "name": "grafana-probe",
+  "version": "2.0.0",
+  "description": "GrafanaProbe — Enterprise-grade Grafana testing platform by Gopal Rao",
+  "private": true,
+  "workspaces": ["backend", "frontend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "test": "cd backend && npm test"
+  },
+  "author": "Gopal Rao",
+  "license": "MIT"
+}
