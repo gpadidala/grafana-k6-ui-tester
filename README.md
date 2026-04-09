@@ -285,39 +285,94 @@ grafana-k6-ui-tester/
 | Frontend shows blank page | Make sure backend is running first: `cd backend && npm run dev` |
 | `npm install` fails | Check Node.js version: `node -v` (need 18+) |
 | Backend can't connect to Grafana | Check `backend/.env` — verify URL and token |
-| `EADDRINUSE: port 4000` | Kill old process: `kill $(lsof -ti :4000)` then restart |
-| `EADDRINUSE: port 3001` | Kill old process: `kill $(lsof -ti :3001)` then restart |
+| `EADDRINUSE: port 4000` | Kill old process — **macOS/Linux:** `kill $(lsof -ti :4000)` **Windows:** `taskkill /f /im node.exe` |
+| `EADDRINUSE: port 3001` | Kill old process — **macOS/Linux:** `kill $(lsof -ti :3001)` **Windows:** `taskkill /f /im node.exe` |
+| `'PORT' is not recognized` (Windows) | Run `npm install` again — `cross-env` package handles this automatically |
 | Reports page empty | Run some tests first from the Run Tests page |
 | Test Connection fails in UI | Backend must be running — it proxies through port 4000 |
 | All datasource tests fail | Verify token has Admin role in Grafana |
-| `better-sqlite3` install fails | Need build tools: `xcode-select --install` (macOS) or `apt install build-essential` (Linux) |
+| `better-sqlite3` install fails | Need build tools: **macOS:** `xcode-select --install` **Linux:** `apt install build-essential` **Windows:** `npm install -g windows-build-tools` |
 | K8s tests show 0 dashboards | No K8s-tagged dashboards found — add `kubernetes` tag to dashboards |
+| `git pull` fails with SQLite lock | Stop backend first, then pull. See [Git Pull Issues on Windows](#git-pull-issues-on-windows) below |
 
 ---
 
-## Windows Setup (Git Bash — No Admin Required)
+## Windows Setup
 
-```bash
-# 1. Install Node.js from nodejs.org (LTS, no admin needed with user install)
+### PowerShell (Recommended)
+
+```powershell
+# 1. Install Node.js from https://nodejs.org (LTS version, user install — no admin needed)
 
 # 2. Clone
 git clone https://github.com/gpadidala/grafana-k6-ui-tester.git
 cd grafana-k6-ui-tester
 
-# 3. Backend
+# 3. Backend (Terminal 1)
 cd backend
 npm install
-cp .env.example .env
-# Edit .env with notepad: notepad .env
+copy .env.example .env
+notepad .env          # Edit with your Grafana URL and token, save, close
 npm run dev
 
-# 4. Frontend (new terminal)
-cd frontend
+# 4. Frontend (Terminal 2 — open a NEW terminal)
+cd grafana-k6-ui-tester\frontend
 npm install
 npm start
 
-# 5. Open http://localhost:3001
+# 5. Open http://localhost:3001 in your browser
 ```
+
+### Git Bash
+
+```bash
+git clone https://github.com/gpadidala/grafana-k6-ui-tester.git
+cd grafana-k6-ui-tester
+
+# Backend (Terminal 1)
+cd backend && npm install && cp .env.example .env
+# Edit .env: notepad .env
+npm run dev
+
+# Frontend (Terminal 2)
+cd frontend && npm install && npm start
+```
+
+### Git Pull Issues on Windows
+
+If `git pull` fails with `Unlink of file 'backend/data/grafana-probe.db-shm' failed`:
+
+```powershell
+# 1. Stop the backend first
+taskkill /f /im node.exe
+
+# 2. Discard local changes and pull
+git checkout -- frontend/package-lock.json
+git pull
+
+# 3. Restart
+cd backend && npm run dev
+# (new terminal) cd frontend && npm start
+```
+
+If db files still block:
+
+```powershell
+# Force pull (ignores local changes)
+git stash
+git pull
+cd frontend && npm install && npm start
+```
+
+### Common Windows Issues
+
+| Problem | Solution |
+|---------|----------|
+| `'PORT' is not recognized` | Run `cd frontend && npm install` — `cross-env` package fixes this |
+| `better-sqlite3` build fails | Run: `npm install -g windows-build-tools` (needs admin once) |
+| `EADDRINUSE` port error | Run: `taskkill /f /im node.exe` to kill all Node processes |
+| `npm start` opens wrong port | Frontend runs on **3001**, backend on **4000** — check you're in the right folder |
+| SQLite db files block git | Stop backend first: `taskkill /f /im node.exe` then `git pull` |
 
 ---
 
