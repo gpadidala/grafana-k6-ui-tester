@@ -1,0 +1,39 @@
+# config/instances.yaml — Multi-instance Grafana registry for Grafana Sentinel
+# Used by: sentinel compare, multi-instance/instance-registry.js
+# Load with: registry.loadFromYaml('config/instances.yaml')
+
+instances:
+  - id: production
+    name: Production Grafana
+    label: PROD
+    url: "http://grafana-prod.company.com"
+    token: ""              # Set via GRAFANA_TOKEN_PROD env var or directly here
+    org_id: 1
+    environment: production
+    tags: ["primary", "monitored"]
+
+  - id: staging
+    name: Staging Grafana
+    label: STAGING
+    url: "http://grafana-staging.company.com"
+    token: ""              # GRAFANA_TOKEN_STAGING
+    org_id: 1
+    environment: staging
+    tags: ["pre-prod", "sync-target"]
+
+  - id: dev
+    name: Development Grafana
+    label: DEV
+    url: "http://localhost:3000"
+    token: ""              # GRAFANA_TOKEN_DEV
+    org_id: 1
+    environment: development
+    tags: ["local"]
+
+  # Kubernetes example:
+  # - id: k8s-prod
+  #   name: K8s Production
+  #   url: "http://grafana.monitoring.svc.cluster.local:3000"
+  #   token: ""
+  #   environment: production
+  #   tags: ["kubernetes", "in-cluster"]

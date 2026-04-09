@@ -1,10 +1,22 @@
 version: '3.8'
+
+# Grafana Sentinel V3 — Docker Compose
+# Usage:
+#   docker-compose up               → Start Grafana demo + Sentinel dashboard
+#   docker-compose up grafana       → Start Grafana demo only
+#   docker-compose up sentinel      → Start Sentinel backend only
+#   docker-compose --profile full up → Start full stack including Prometheus Pushgateway
+
 services:
+
+  # ── Grafana demo instance (pre-loaded with dashboards) ───────
   grafana:
-    build: .
-    container_name: grafana-k6-test
+    build:
+      context: .
+      target: grafana-demo
+    container_name: sentinel-grafana
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
@@ -14,12 +26,98 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 5s
       timeout: 5s
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  # ── Sentinel backend / web dashboard ─────────────────────────
+  sentinel:
+    build:
+      context: .
+      target: sentinel-backend
+    container_name: sentinel-backend
+    ports:
+      - "${SENTINEL_PORT:-4000}:4000"
+      - "${FRONTEND_PORT:-3001}:3001"
+    volumes:
+      - sentinel-data:/app/data
+      - sentinel-reports:/app/reports
+      - sentinel-snapshots:/app/snapshots
+    environment:
+      - GRAFANA_URL=http://grafana:3000
+      - GRAFANA_TOKEN=${GRAFANA_TOKEN:-}
+      - PORT=4000
+      - DB_PATH=/app/data/sentinel.db
+      - REPORT_DIR=/app/reports
+      - SNAPSHOT_DIR=/app/snapshots
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - PAGERDUTY_ROUTING_KEY=${PAGERDUTY_ROUTING_KEY:-}
+    depends_on:
+      grafana:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  # ── Frontend (React dashboard) ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentinel-frontend
+    ports:
+      - "${FRONTEND_PORT:-3001}:3001"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+      - PORT=3001
+    depends_on:
+      - sentinel
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+    profiles: ["frontend"]
+
+  # ── Prometheus Pushgateway (optional, for metrics export) ─────
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: sentinel-pushgateway
+    ports:
+      - "9091:9091"
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+    profiles: ["full"]
+
+  # ── Prometheus (optional, scrapes Pushgateway) ────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sentinel-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+    profiles: ["full"]
+
+networks:
+  sentinel-net:
+    driver: bridge
 
 volumes:
   grafana-data:
+  sentinel-data:
+  sentinel-reports:
+  sentinel-snapshots:

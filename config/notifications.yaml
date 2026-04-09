@@ -1,0 +1,61 @@
+# config/notifications.yaml — Alert routing and notification channel configuration
+# Loaded by: core/notification-engine.js
+
+global:
+  min_severity: "warning"          # Minimum severity to send any notification
+  on_failure: true
+  on_recovery: true
+  on_degradation: true
+
+channels:
+  # ── Slack ────────────────────────────────────────────────────
+  - type: slack
+    name: "ops-alerts"
+    webhook_url: ""                # Set SLACK_WEBHOOK_URL env var or fill in here
+    min_severity: "warning"
+    on_failure: true
+    on_recovery: true
+    # channel: "#grafana-alerts"   # Optional: override default channel
+
+  - type: slack
+    name: "critical-only"
+    webhook_url: ""                # SLACK_CRITICAL_WEBHOOK_URL
+    min_severity: "critical"
+    on_failure: true
+    on_recovery: true
+    # channel: "#incidents"
+
+  # ── PagerDuty ─────────────────────────────────────────────────
+  - type: pagerduty
+    name: "oncall"
+    routing_key: ""                # PAGERDUTY_ROUTING_KEY
+    min_severity: "critical"
+    on_failure: true
+    on_recovery: true             # Auto-resolve PD incidents
+
+  # ── Email ─────────────────────────────────────────────────────
+  - type: email
+    name: "weekly-summary"
+    smtp_host: "smtp.company.com"
+    smtp_port: 587
+    smtp_secure: false
+    smtp_user: ""
+    smtp_pass: ""
+    from: "sentinel@company.com"
+    to:
+      - "sre-team@company.com"
+    min_severity: "info"
+    on_failure: true
+    on_recovery: false            # Don't flood email with recoveries
+
+  # ── Generic Webhook ───────────────────────────────────────────
+  - type: webhook
+    name: "custom-webhook"
+    url: ""                        # SENTINEL_WEBHOOK_URL
+    min_severity: "warning"
+    headers:
+      X-Sentinel-Source: "grafana-sentinel"
+      # X-API-Key: "your-key"
+    extra_fields:
+      environment: "production"
+      team: "sre"

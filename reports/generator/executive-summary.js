@@ -1,0 +1,99 @@
+'use strict';
+/**
+ * reports/generator/executive-summary.js — 1-page management summary.
+ */
+
+const fs   = require('fs');
+const path = require('path');
+
+function generateExecutiveSummary(report, healthScore, trendData = null, outputPath = null) {
+  const summary = report.summary || {};
+  const score   = healthScore?.score ?? summary.pass_rate ?? 0;
+  const grade   = healthScore?.grade?.letter || '—';
+  const status  = healthScore?.status || (score >= 80 ? 'healthy' : score >= 60 ? 'degraded' : 'critical');
+  const statusColors = { healthy: '#2eb67d', degraded: '#ecb22e', critical: '#e01e5a' };
+  const color   = statusColors[status] || '#888';
+
+  const topIssues = (report.categories || [])
+    .flatMap(c => (c.tests || []).filter(t => t.status === 'FAIL').map(t => ({ category: c.name, test: t.name, detail: t.detail })))
+    .slice(0, 5);
+
+  const issueRows = topIssues.length
+    ? topIssues.map(i => `<li><strong>[${i.category}]</strong> ${i.test}${i.detail ? ` — <em>${i.detail.slice(0, 80)}</em>` : ''}</li>`).join('')
+    : '<li style="color:#2eb67d">No critical failures</li>';
+
+  const trendLine = trendData?.recent_scores
+    ? `Trend: ${trendData.direction || 'stable'} (${trendData.velocity >= 0 ? '+' : ''}${trendData.velocity} pts/day)`
+    : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Grafana Sentinel — Executive Summary</title>
+<style>
+  @page{size:A4;margin:1.5cm}
+  body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:2rem;max-width:800px;margin:auto}
+  h1{font-size:1.6rem;color:#1a1a1a;margin-bottom:0.25rem}
+  .meta{color:#888;font-size:0.85rem;margin-bottom:2rem}
+  .score-box{border:3px solid ${color};border-radius:12px;padding:2rem;display:flex;gap:2rem;align-items:center;margin-bottom:2rem}
+  .score-num{font-size:5rem;font-weight:900;color:${color};line-height:1}
+  .score-label{font-size:1.2rem;font-weight:600;color:#1a1a1a}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+  .stat{border:1px solid #e0e0e0;border-radius:8px;padding:1rem;text-align:center}
+  .stat-val{font-size:1.8rem;font-weight:700;color:#1a1a1a}
+  .stat-lbl{font-size:0.8rem;color:#666;margin-top:0.25rem}
+  ul{margin:0;padding-left:1.5rem}
+  li{margin-bottom:0.5rem;font-size:0.9rem}
+  .section-title{font-weight:600;color:#444;text-transform:uppercase;font-size:0.75rem;letter-spacing:1px;margin:1.5rem 0 0.75rem}
+  footer{margin-top:3rem;color:#aaa;font-size:0.75rem;text-align:center;border-top:1px solid #e0e0e0;padding-top:1rem}
+</style></head><body>
+<h1>🛡 Grafana Sentinel — Executive Summary</h1>
+<div class="meta">${report.grafanaUrl || ''} &nbsp;|&nbsp; ${new Date(report.startedAt || Date.now()).toLocaleDateString()} &nbsp;|&nbsp; v${report.grafanaVersion || '?'}</div>
+
+<div class="score-box">
+  <div class="score-num">${score}</div>
+  <div>
+    <div class="score-label">Health Score / 100 — Grade ${grade}</div>
+    <div style="color:${color};font-weight:600;margin-top:0.25rem">${status.toUpperCase()}</div>
+    ${trendLine ? `<div style="color:#888;font-size:0.85rem;margin-top:0.25rem">${trendLine}</div>` : ''}
+  </div>
+</div>
+
+<div class="grid">
+  <div class="stat"><div class="stat-val">${summary.total || '—'}</div><div class="stat-lbl">Total Tests</div></div>
+  <div class="stat"><div class="stat-val" style="color:#2eb67d">${summary.passed || '—'}</div><div class="stat-lbl">Passed</div></div>
+  <div class="stat"><div class="stat-val" style="color:#e01e5a">${summary.failed || '—'}</div><div class="stat-lbl">Failed</div></div>
+  <div class="stat"><div class="stat-val" style="color:#ecb22e">${summary.warnings || '—'}</div><div class="stat-lbl">Warnings</div></div>
+</div>
+
+<div class="section-title">Top Issues Requiring Attention</div>
+<ul>${issueRows}</ul>
+
+<div class="section-title">Category Breakdown</div>
+<table style="width:100%;border-collapse:collapse">
+  <tr style="border-bottom:2px solid #e0e0e0">
+    <th style="text-align:left;padding:0.5rem 0;font-size:0.85rem;color:#666">Category</th>
+    <th style="text-align:center;padding:0.5rem 0;font-size:0.85rem;color:#666">Status</th>
+    <th style="text-align:right;padding:0.5rem 0;font-size:0.85rem;color:#666">Pass Rate</th>
+  </tr>
+  ${(report.categories || []).map(c => {
+    const rate = c.tests?.length ? Math.round(c.tests.filter(t => t.status === 'PASS').length / c.tests.length * 100) : null;
+    const clr  = c.status === 'PASS' ? '#2eb67d' : c.status === 'FAIL' ? '#e01e5a' : '#ecb22e';
+    return `<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:0.4rem 0;font-size:0.9rem">${c.icon || ''} ${c.name}</td>
+      <td style="text-align:center"><span style="color:${clr};font-weight:600">${c.status || '—'}</span></td>
+      <td style="text-align:right;color:#666;font-size:0.85rem">${rate !== null ? rate + '%' : '—'}</td>
+    </tr>`;
+  }).join('')}
+</table>
+
+<footer>Generated by Grafana Sentinel V3 &nbsp;|&nbsp; ${new Date().toLocaleString()}</footer>
+</body></html>`;
+
+  const outPath = outputPath || `./reports/executive-${Date.now()}.html`;
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, html);
+  return outPath;
+}
+
+module.exports = { generateExecutiveSummary };

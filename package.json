@@ -1,13 +1,65 @@
 {
-  "name": "grafana-k6-ui-tester",
-  "version": "1.0.0",
-  "description": "Production-grade Grafana UI testing framework using k6 Browser automation",
-  "scripts": {
-    "test": "./run.sh",
-    "demo": "./demo-run.sh",
-    "discover": "k6 run scripts/discover.js"
+  "name": "grafana-sentinel",
+  "version": "3.0.0",
+  "description": "Grafana Sentinel — Enterprise UI Testing, Upgrade Validation & Observability Platform",
+  "main": "backend/src/server.js",
+  "bin": {
+    "sentinel": "./cli/sentinel.js"
   },
-  "keywords": ["grafana", "k6", "testing", "browser", "automation", "ui-testing"],
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "sentinel": "node cli/sentinel.js",
+    "smoke": "node cli/sentinel.js run --level smoke",
+    "standard": "node cli/sentinel.js run --level standard",
+    "full": "node cli/sentinel.js run --level full",
+    "snapshot:capture": "node cli/sentinel.js snapshot capture",
+    "snapshot:compare": "node cli/sentinel.js snapshot compare",
+    "monitor": "node cli/sentinel.js monitor start",
+    "dashboard": "node cli/sentinel.js dashboard serve",
+    "demo": "./demo-run.sh",
+    "frontend": "cd frontend && npm start",
+    "frontend:build": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "grafana",
+    "testing",
+    "upgrade-validation",
+    "observability",
+    "sentinel",
+    "monitoring",
+    "k6",
+    "browser",
+    "enterprise"
+  ],
   "author": "Gopal Padidala",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "better-sqlite3": "^12.8.0",
+    "commander": "^14.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "handlebars": "^4.7.8",
+    "js-yaml": "^4.1.0",
+    "nodemailer": "^6.9.14",
+    "node-cron": "^4.2.1",
+    "pngjs": "^7.0.0",
+    "socket.io": "^4.7.5",
+    "uuid": "^10.0.0",
+    "winston": "^3.19.0",
+    "ws": "^8.18.0"
+  },
+  "optionalDependencies": {
+    "pixelmatch": "^5.3.0",
+    "puppeteer": "^22.8.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

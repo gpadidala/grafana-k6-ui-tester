@@ -1,0 +1,129 @@
+# config/default.yaml — Grafana Sentinel V3 default configuration
+# Priority: CLI flags > environment variables > this file > built-in defaults
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Grafana connection
+# ─────────────────────────────────────────────────────────────────────────────
+grafana:
+  url: "http://localhost:3000"    # GRAFANA_URL env var overrides this
+  token: ""                        # GRAFANA_TOKEN (service account token, required)
+  org_id: 1
+  timeout_ms: 15000
+  retry_attempts: 3
+  retry_delay_ms: 1000
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Test execution
+# ─────────────────────────────────────────────────────────────────────────────
+testing:
+  test_level: "standard"           # smoke | standard | full
+  headless: true
+  parallel_vus: 1
+  dashboard_load_timeout_ms: 30000
+  panel_load_timeout_ms: 15000
+  screenshot_on_fail: true
+  screenshot_on_pass: false
+  rate_limit_ms: 200               # Delay between API calls (ms)
+  max_dashboards: 0                # 0 = no limit (all dashboards)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pass/fail thresholds
+# ─────────────────────────────────────────────────────────────────────────────
+thresholds:
+  dashboard_load_p95_ms: 5000      # 95th pct dashboard load time
+  panel_render_p95_ms: 3000
+  api_response_p99_ms: 2000
+  min_pass_rate_pct: 80            # Overall pass rate below this = test failure
+  max_no_data_pct: 10              # Max % of panels with "No data"
+  max_error_pct: 5                 # Max % of panels with errors
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Continuous monitoring schedule
+# ─────────────────────────────────────────────────────────────────────────────
+monitoring:
+  enabled: false
+  schedule: "0 7 * * *"           # 07:00 UTC daily
+  retention_days: 30
+  alert_on_degradation_pct: 10    # Alert when score drops >10 pts from baseline
+  baseline_window_days: 7
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Health scorer weights (must sum to 1.0)
+# ─────────────────────────────────────────────────────────────────────────────
+health_scorer:
+  weights:
+    dashboard_pass_rate: 0.35
+    alert_pass_rate: 0.15
+    datasource_health: 0.20
+    core_pages: 0.10
+    performance: 0.10
+    no_data_rate: 0.05
+    plugin_health: 0.05
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Notifications
+# ─────────────────────────────────────────────────────────────────────────────
+notifications:
+  enabled: false
+  min_severity: "warning"          # info | warning | critical
+  on_failure: true
+  on_recovery: true
+  on_degradation: true
+  channels: []
+  # Example channel configs:
+  # channels:
+  #   - type: slack
+  #     webhook_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+  #     min_severity: warning
+  #   - type: pagerduty
+  #     routing_key: "your-pagerduty-routing-key"
+  #     min_severity: critical
+  #   - type: email
+  #     smtp_host: "smtp.company.com"
+  #     smtp_port: 587
+  #     smtp_user: "alerts@company.com"
+  #     smtp_pass: "password"
+  #     from: "sentinel@company.com"
+  #     to: ["oncall@company.com"]
+  #   - type: webhook
+  #     url: "https://your-webhook.com/sentinel"
+  #     headers:
+  #       X-API-Key: "your-key"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Snapshots (upgrade validation)
+# ─────────────────────────────────────────────────────────────────────────────
+snapshots:
+  output_dir: "./snapshots"
+  include_screenshots: false       # Set true to capture visual baselines
+  include_performance: true
+  compress: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reports
+# ─────────────────────────────────────────────────────────────────────────────
+reports:
+  output_dir: "./reports"
+  formats: ["html", "json"]
+  open_after_run: false
+  include_screenshots: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Web dashboard server
+# ─────────────────────────────────────────────────────────────────────────────
+server:
+  port: 4000
+  host: "0.0.0.0"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Database
+# ─────────────────────────────────────────────────────────────────────────────
+database:
+  path: "./data/sentinel.db"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Logging
+# ─────────────────────────────────────────────────────────────────────────────
+log:
+  level: "info"                    # debug | info | warn | error
+  file: null                       # null = stdout only; or "./logs/sentinel.log"

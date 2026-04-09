@@ -1,0 +1,116 @@
+'use strict';
+/**
+ * reports/generator/html-report.js — Generate a detailed HTML test report.
+ */
+
+const fs   = require('fs');
+const path = require('path');
+
+function generateHtmlReport(report, outputPath) {
+  const { categories = [], summary = {}, grafanaUrl, grafanaVersion, startedAt, completedAt, id } = report;
+
+  const statusColor  = s => s === 'PASS' ? '#2eb67d' : s === 'FAIL' ? '#e01e5a' : '#ecb22e';
+  const statusIcon   = s => s === 'PASS' ? '✅' : s === 'FAIL' ? '❌' : '⚠️';
+  const overallColor = summary.pass_rate >= 80 ? '#2eb67d' : summary.pass_rate >= 60 ? '#ecb22e' : '#e01e5a';
+
+  const categoryRows = categories.map(cat => {
+    const testRows = (cat.tests || []).map(t => `
+      <tr>
+        <td style="padding-left:2rem;color:#aaa">${t.name || '—'}</td>
+        <td><span style="color:${statusColor(t.status)};font-weight:bold">${statusIcon(t.status)} ${t.status}</span></td>
+        <td style="color:#888">${t.ms !== undefined ? t.ms + 'ms' : '—'}</td>
+        <td style="color:#bbb;font-size:0.85rem;max-width:400px;overflow:hidden;text-overflow:ellipsis">${t.detail || ''}</td>
+      </tr>`).join('');
+
+    return `
+      <tr class="cat-row" onclick="toggleCat('${cat.id}')">
+        <td><strong>${cat.icon || ''} ${cat.name}</strong></td>
+        <td><span style="color:${statusColor(cat.status)};font-weight:bold">${statusIcon(cat.status)} ${cat.status}</span></td>
+        <td style="color:#888">${cat.duration_ms !== undefined ? cat.duration_ms + 'ms' : '—'}</td>
+        <td style="color:#888">${(cat.tests || []).length} tests</td>
+      </tr>
+      <tr id="cat-${cat.id}" style="display:none">
+        <td colspan="4" style="padding:0">
+          <table style="width:100%;background:#111">${testRows}</table>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grafana Sentinel Report — ${new Date(startedAt).toLocaleString()}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f0f0f;color:#e0e0e0;padding:2rem}
+  h1{font-size:1.8rem;margin-bottom:0.25rem;color:#fff}
+  .subtitle{color:#888;margin-bottom:2rem;font-size:0.9rem}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem}
+  .card{background:#1a1a1a;border-radius:8px;padding:1.25rem;border:1px solid #333}
+  .card-value{font-size:2rem;font-weight:700;color:#fff;line-height:1}
+  .card-label{color:#888;font-size:0.85rem;margin-top:0.25rem}
+  .score-card{background:#1a1a1a;border-radius:8px;padding:1.5rem;border:2px solid;margin-bottom:2rem;display:flex;align-items:center;gap:2rem}
+  .score-big{font-size:5rem;font-weight:900;line-height:1}
+  .table-wrap{background:#1a1a1a;border-radius:8px;overflow:hidden;border:1px solid #333}
+  table{width:100%;border-collapse:collapse}
+  th{background:#222;padding:0.75rem 1rem;text-align:left;color:#aaa;font-weight:600;font-size:0.85rem}
+  td{padding:0.75rem 1rem;border-bottom:1px solid #222}
+  .cat-row{cursor:pointer}
+  .cat-row:hover td{background:#222}
+  footer{margin-top:3rem;color:#555;font-size:0.8rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🛡 Grafana Sentinel — Test Report</h1>
+<div class="subtitle">
+  Run ID: ${id || '—'} &nbsp;|&nbsp;
+  Grafana: ${grafanaUrl || '—'} (v${grafanaVersion || '?'}) &nbsp;|&nbsp;
+  ${new Date(startedAt).toLocaleString()}
+</div>
+
+<div class="score-card" style="border-color:${overallColor}">
+  <div class="score-big" style="color:${overallColor}">${summary.pass_rate ?? '—'}</div>
+  <div>
+    <div style="font-size:1.25rem;font-weight:600;color:#fff">Pass Rate</div>
+    <div style="color:#888;margin-top:0.25rem">${summary.passed ?? '?'} passed / ${summary.failed ?? '?'} failed / ${summary.warnings ?? '?'} warnings</div>
+    <div style="color:#888">${summary.total ?? '?'} total tests</div>
+  </div>
+</div>
+
+<div class="summary-grid">
+  <div class="card"><div class="card-value">${categories.length}</div><div class="card-label">Categories</div></div>
+  <div class="card"><div class="card-value">${summary.total ?? '—'}</div><div class="card-label">Total Tests</div></div>
+  <div class="card" style="border-color:#2eb67d20"><div class="card-value" style="color:#2eb67d">${summary.passed ?? '—'}</div><div class="card-label">Passed</div></div>
+  <div class="card" style="border-color:#e01e5a20"><div class="card-value" style="color:#e01e5a">${summary.failed ?? '—'}</div><div class="card-label">Failed</div></div>
+  <div class="card" style="border-color:#ecb22e20"><div class="card-value" style="color:#ecb22e">${summary.warnings ?? '—'}</div><div class="card-label">Warnings</div></div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Category</th><th>Status</th><th>Duration</th><th>Tests</th></tr></thead>
+    <tbody>${categoryRows}</tbody>
+  </table>
+</div>
+
+<footer>
+  Generated by <strong>Grafana Sentinel V3</strong> &nbsp;|&nbsp;
+  Run: ${startedAt} → ${completedAt || '?'}
+</footer>
+
+<script>
+function toggleCat(id){
+  const el=document.getElementById('cat-'+id);
+  if(el) el.style.display=el.style.display==='none'?'':'none';
+}
+</script>
+</body></html>`;
+
+  const outPath = outputPath || `./reports/report-${id}-${Date.now()}.html`;
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, html);
+  return outPath;
+}
+
+module.exports = { generateHtmlReport };
