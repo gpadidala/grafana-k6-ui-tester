@@ -1,0 +1,249 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>GrafanaProbe Report</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f1419;color:#e1e8ed;padding:24px}a{color:#60a5fa;text-decoration:none}a:hover{text-decoration:underline}</style></head><body>
+<div style="text-align:center;padding:24px;background:linear-gradient(135deg,#1a1f2e,#2d3748);border-radius:12px;margin-bottom:20px">
+  <h1 style="font-size:22px;color:#fff;margin-bottom:6px">GrafanaProbe — Test Report</h1>
+  <p style="color:#8899a6;font-size:13px">http://localhost:3200 | Grafana 11.6.4 | 4/8/2026, 7:51:01 PM</p>
+  <p style="color:#8899a6;font-size:11px;margin-top:4px">by Gopal Rao</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;text-align:center"><p style="color:#8899a6;font-size:10px;text-transform:uppercase;letter-spacing:1px">Total</p><p style="font-size:26px;font-weight:bold;color:#3b82f6">34</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;text-align:center"><p style="color:#8899a6;font-size:10px;text-transform:uppercase;letter-spacing:1px">Passed</p><p style="font-size:26px;font-weight:bold;color:#22c55e">27</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;text-align:center"><p style="color:#8899a6;font-size:10px;text-transform:uppercase;letter-spacing:1px">Failed</p><p style="font-size:26px;font-weight:bold;color:#ef4444">0</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;text-align:center"><p style="color:#8899a6;font-size:10px;text-transform:uppercase;letter-spacing:1px">Warnings</p><p style="font-size:26px;font-weight:bold;color:#eab308">7</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;text-align:center"><p style="color:#8899a6;font-size:10px;text-transform:uppercase;letter-spacing:1px">Pass Rate</p><p style="font-size:26px;font-weight:bold;color:#ef4444">79.4%</p></div>
+</div>
+<div style="text-align:center;padding:14px;border-radius:10px;font-size:18px;font-weight:bold;margin-bottom:20px;background:#450a0a;color:#ef4444;border:2px solid #ef4444">
+  FAILED — 79.4% pass rate (4 categories)
+</div>
+<div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1a1f2e;border-radius:8px;margin-bottom:2px">
+          <span><span style="margin-right:6px">💚</span><strong style="color:#fff">API Health</strong> <span style="color:#8899a6;font-size:12px;margin-left:6px">5/5</span><span style="color:#8899a6;font-size:11px;margin-left:8px">18ms</span></span>
+          <span style="color:#22c55e;font-weight:600;font-size:13px">PASS</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1</td>
+          <td style="padding:6px 10px">API Connectivity</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1ms</td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Grafana reachable — 1ms</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">2</td>
+          <td style="padding:6px 10px">Auth Validation</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4ms</td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Authenticated as: sa-1-admin (orgId: 1)</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">3</td>
+          <td style="padding:6px 10px">Response Time < 2s</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1ms</td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Health endpoint responded in 1ms</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4</td>
+          <td style="padding:6px 10px">Build Info</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">9ms</td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Grafana 11.6.4, DB: ok</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">5</td>
+          <td style="padding:6px 10px">Org Access</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4ms</td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Org: Main Org. (id: 1)</td>
+          <td style="padding:6px 10px"></td></tr></table>
+      </div><div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1a1f2e;border-radius:8px;margin-bottom:2px">
+          <span><span style="margin-right:6px">🔒</span><strong style="color:#fff">Config Audit</strong> <span style="color:#8899a6;font-size:12px;margin-left:6px">6/7</span><span style="color:#8899a6;font-size:11px;margin-left:8px">10ms</span></span>
+          <span style="color:#eab308;font-weight:600;font-size:13px">WARN</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1</td>
+          <td style="padding:6px 10px">Grafana Edition</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Open Source v11.6.4 (commit: 0567ef29)</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">2</td>
+          <td style="padding:6px 10px">Anonymous Access</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Anonymous access disabled</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">3</td>
+          <td style="padding:6px 10px">Auth Providers</td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Only basic auth — consider SSO for production</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4</td>
+          <td style="padding:6px 10px">Feature Toggles</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">59 enabled: accessActionSets, addFieldFromCalculationStatFunctions, alertRuleRestore, alertingApiServer, alertingInsights, alertingNoDataErrorExecution, alertingNotificationsStepMode, alertingQueryAndExpressionsStepMode, alertingRuleVersionHistoryRestore, alertingSimplifiedRouting...</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">5</td>
+          <td style="padding:6px 10px">Unified Alerting</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Unified Alerting enabled</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">6</td>
+          <td style="padding:6px 10px">Default Org Role</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Default role: Viewer</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">7</td>
+          <td style="padding:6px 10px">Explore Enabled</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Explore is enabled</td>
+          <td style="padding:6px 10px"></td></tr></table>
+      </div><div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1a1f2e;border-radius:8px;margin-bottom:2px">
+          <span><span style="margin-right:6px">📈</span><strong style="color:#fff">Capacity Planning</strong> <span style="color:#8899a6;font-size:12px;margin-left:6px">8/10</span><span style="color:#8899a6;font-size:11px;margin-left:8px">852ms</span></span>
+          <span style="color:#eab308;font-weight:600;font-size:13px">WARN</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1</td>
+          <td style="padding:6px 10px">Dashboard Density</td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">108 dashboards, 1804 panels total, avg 17/dashboard, 2 heavy (>30 panels)</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">2</td>
+          <td style="padding:6px 10px">Panel Distribution</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Max: 59, Median: 16, Min: 5</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">3</td>
+          <td style="padding:6px 10px">DS Load: efho1hopkh5vkd</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">45 queries across all dashboards</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4</td>
+          <td style="padding:6px 10px">DS Load: fdqfoaj8xiozkf</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 queries across all dashboards</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">5</td>
+          <td style="padding:6px 10px">DS Load: default</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">0 queries across all dashboards</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">6</td>
+          <td style="padding:6px 10px">DS Load: -- Dashboard --</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">0 queries across all dashboards</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">7</td>
+          <td style="padding:6px 10px">DS Load: -- Grafana --</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">0 queries across all dashboards</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">8</td>
+          <td style="padding:6px 10px">Alert Evaluation Load</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">0 alert rules, ~0 evaluations/minute</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">9</td>
+          <td style="padding:6px 10px">Plugin Count</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">51 total, 2 external</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">10</td>
+          <td style="padding:6px 10px">Total Query Volume</td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">2301 queries configured across all dashboards — each viewer session triggers these on load</td>
+          <td style="padding:6px 10px"></td></tr></table>
+      </div><div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1a1f2e;border-radius:8px;margin-bottom:2px">
+          <span><span style="margin-right:6px">☸️</span><strong style="color:#fff">K8s Dashboards</strong> <span style="color:#8899a6;font-size:12px;margin-left:6px">8/12</span><span style="color:#8899a6;font-size:11px;margin-left:8px">91ms</span></span>
+          <span style="color:#eab308;font-weight:600;font-size:13px">WARN</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">1</td>
+          <td style="padding:6px 10px">K8s Dashboard Discovery</td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Found 11 Kubernetes-related dashboards out of 108 total</td>
+          <td style="padding:6px 10px"></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">2</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-cluster-overview" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: AKS — Cluster Overview & Health</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, vars: subscription, resourcegroup, cluster, namespace, node, timegrain</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-cluster-overview" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">3</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-networking" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: AKS — Network & Service Mesh</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, vars: subscription, resourcegroup, cluster, namespace, timegrain</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-networking" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">4</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-node-deep-dive" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: AKS — Node Resource Deep Dive</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, vars: subscription, resourcegroup, cluster, namespace, node, timegrain</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-node-deep-dive" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">5</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-pod-workload" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: AKS — Pod & Workload Analytics</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, vars: subscription, resourcegroup, cluster, namespace, workload, timegrain</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-pod-workload" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">6</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-storage-pv" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: AKS — Storage & Persistent Volumes</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, vars: subscription, resourcegroup, cluster, namespace, timegrain</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/aks-storage-pv" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">7</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/azure-aks-kubernetes" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: Azure — AKS Kubernetes Cluster</a></td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Missing $cluster or $datasource variable | Missing $namespace variable</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/azure-aks-kubernetes" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">8</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/l1-infrastructure-overview" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: L1-A — Infrastructure Overview</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, vars: datasource, datasource_loki, environment, region, cluster, stack, namespace</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/l1-infrastructure-overview" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">9</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/l3-kubernetes-debug" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: L3-D — Kubernetes Debug</a></td>
+          <td style="padding:6px 10px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, vars: datasource, datasource_loki, datasource_tempo, datasource_pyroscope, environment, region, cluster, stack, namespace, service, pod, node_instance</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/l3-kubernetes-debug" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">10</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/mimir-infrastructure" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: Mimir — Infrastructure & USE Metrics</a></td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Missing $cluster or $datasource variable | Deprecated metrics: container_cpu_cfs_throttled_seconds_total (renamed in K8s 1.24+)</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/mimir-infrastructure" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">11</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/oci-oke-cluster-health" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: OCI Kubernetes (OKE) — Cluster Health</a></td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Missing $cluster or $datasource variable | Missing $namespace variable</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/oci-oke-cluster-health" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px">12</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/oci-oke-container-logs" target="_blank" style="color:#60a5fa;text-decoration:none">K8s: OCI Logs — OKE Container & Pod Logs</a></td>
+          <td style="padding:6px 10px"><span style="background:#422006;color:#eab308;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">WARN</span></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px"></td>
+          <td style="padding:6px 10px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Missing $cluster or $datasource variable | Missing $namespace variable</td>
+          <td style="padding:6px 10px"><a href="http://localhost:3200/d/oci-oke-container-logs" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a></td></tr></table>
+      </div>
+<div style="text-align:center;padding:14px;color:#8899a6;font-size:11px;margin-top:20px">
+  <span style="color:#60a5fa;font-weight:600">Gopal Rao</span> | GrafanaProbe v2 | 2026-04-09T02:51:04.538Z
+</div></body></html>

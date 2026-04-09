@@ -100,6 +100,12 @@ app.get('/api/reports/:file', (req, res) => {
   res.json(report);
 });
 
+// Dependency Graph
+app.get('/api/graph', (req, res) => { res.json(engine.getDepGraph()); });
+app.get('/api/graph/stats', (req, res) => { res.json(engine.getDepGraphStats()); });
+app.get('/api/graph/impact/datasource/:uid', (req, res) => { res.json(engine.getImpactByDatasource(req.params.uid)); });
+app.get('/api/graph/impact/plugin/:id', (req, res) => { res.json(engine.getImpactByPlugin(req.params.id)); });
+
 // Serve HTML report
 app.get('/api/reports/html/:file', (req, res) => {
   const filepath = require('path').join(__dirname, '../reports', req.params.file);
