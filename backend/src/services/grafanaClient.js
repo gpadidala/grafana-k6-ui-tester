@@ -36,7 +36,12 @@ class GrafanaClient {
   async buildInfo() { return this.get('/api/frontend/settings'); }
   async searchDashboards() { return this.get('/api/search?type=dash-db&limit=5000'); }
   async getDashboard(uid) { return this.get(`/api/dashboards/uid/${uid}`); }
-  async searchFolders() { return this.get('/api/search?type=dash-folder&limit=1000'); }
+  async searchFolders() {
+    // Grafana 11.x uses /api/folders, older versions use /api/search?type=dash-folder
+    const res = await this.get('/api/folders?limit=1000');
+    if (res.ok) return res;
+    return this.get('/api/search?type=dash-folder&limit=1000');
+  }
   async getFolder(uid) { return this.get(`/api/folders/${uid}`); }
   async getFolderPermissions(uid) { return this.get(`/api/folders/${uid}/permissions`); }
   async getDatasources() { return this.get('/api/datasources'); }

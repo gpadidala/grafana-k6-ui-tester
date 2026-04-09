@@ -28,6 +28,34 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Test connection to a Grafana instance (proxy to avoid CORS)
+app.post('/api/test-connection', async (req, res) => {
+  const { grafanaUrl, token } = req.body;
+  const url = (grafanaUrl && grafanaUrl.trim()) ? grafanaUrl.trim() : config.grafanaUrl;
+  const tok = (token && token.trim()) ? token.trim() : config.grafanaToken;
+
+  const GrafanaClient = require('./services/grafanaClient');
+  const client = new GrafanaClient(url, tok);
+  const health = await client.health();
+  const user = await client.get('/api/user');
+
+  if (health.ok) {
+    res.json({
+      ok: true,
+      version: health.data?.version || 'unknown',
+      database: health.data?.database || 'unknown',
+      user: user.ok ? (user.data?.login || 'anonymous') : 'anonymous',
+      ms: health.ms,
+    });
+  } else {
+    res.json({
+      ok: false,
+      error: health.error || `HTTP ${health.status}`,
+      ms: health.ms,
+    });
+  }
+});
+
 app.get('/api/tests/categories', (req, res) => {
   res.json(engine.getCategories());
 });
@@ -35,8 +63,8 @@ app.get('/api/tests/categories', (req, res) => {
 // Run all tests
 app.post('/api/tests/run', async (req, res) => {
   const { grafanaUrl, token, categories } = req.body;
-  const url = grafanaUrl || config.grafanaUrl;
-  const tok = token || config.grafanaToken;
+  const url = (grafanaUrl && grafanaUrl.trim()) ? grafanaUrl.trim() : config.grafanaUrl;
+  const tok = (token && token.trim()) ? token.trim() : config.grafanaToken;
 
   const report = await engine.runCategories(
     categories || engine.getCategories().map(c => c.id),
@@ -91,8 +119,9 @@ io.on('connection', (socket) => {
 
   socket.on('run-tests', async (data) => {
     const { grafanaUrl, token, categories } = data || {};
-    const url = grafanaUrl || config.grafanaUrl;
-    const tok = token || config.grafanaToken;
+    const url = (grafanaUrl && grafanaUrl.trim()) ? grafanaUrl.trim() : config.grafanaUrl;
+    const tok = (token && token.trim()) ? token.trim() : config.grafanaToken;
+    console.log(`Run request — URL: ${url}, Auth: ${tok ? 'token' : 'none'}, Categories: ${categories || 'all'}`);
 
     const report = await engine.runCategories(
       categories || engine.getCategories().map(c => c.id),

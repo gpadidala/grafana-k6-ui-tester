@@ -46,14 +46,23 @@ export default function EnvironmentsPage() {
 
   function handleTest(env: Environment) {
     if (!env.grafanaUrl) { alert('Enter a Grafana URL first'); return; }
-    const url = env.grafanaUrl.replace(/\/$/, '') + '/api/health';
-    const headers: Record<string, string> = {};
-    if (env.token) headers['Authorization'] = `Bearer ${env.token}`;
 
-    fetch(url, { headers })
+    // Proxy through backend to avoid CORS
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+    fetch(`${API_BASE}/api/test-connection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grafanaUrl: env.grafanaUrl, token: env.token }),
+    })
       .then(r => r.json())
-      .then(data => alert(`Connection OK!\nGrafana ${data.version}\nDatabase: ${data.database}`))
-      .catch(err => alert(`Connection failed: ${err.message}\n\nCheck the URL and ensure CORS is enabled on Grafana.`));
+      .then(data => {
+        if (data.ok) {
+          alert(`Connection OK!\n\nGrafana ${data.version}\nDatabase: ${data.database}\nUser: ${data.user}\nResponse: ${data.ms}ms`);
+        } else {
+          alert(`Connection failed: ${data.error}`);
+        }
+      })
+      .catch(err => alert(`Backend not reachable: ${err.message}\n\nMake sure the backend is running on port 4000.`));
   }
 
   return (

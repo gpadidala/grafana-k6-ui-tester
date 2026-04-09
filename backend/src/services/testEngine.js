@@ -121,13 +121,13 @@ class TestEngine {
     try {
       return fs.readdirSync(this.reportsDir)
         .filter(f => f.endsWith('.json'))
-        .sort().reverse()
         .map(f => {
           try {
             const data = JSON.parse(fs.readFileSync(path.join(this.reportsDir, f), 'utf-8'));
             return { file: f, id: data.id, status: data.status, startedAt: data.startedAt, summary: data.summary, grafanaUrl: data.grafanaUrl };
-          } catch { return { file: f, id: f, status: 'unknown' }; }
-        });
+          } catch { return { file: f, id: f, status: 'unknown', startedAt: '' }; }
+        })
+        .sort((a, b) => (b.startedAt || '').localeCompare(a.startedAt || ''));
     } catch { return []; }
   }
 

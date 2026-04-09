@@ -9,11 +9,13 @@ module.exports = async function folderTests(client) {
   const folders = Array.isArray(res.data) ? res.data : [];
   results.push({ name: 'Fetch Folders', status: 'PASS', detail: `Found ${folders.length} folder(s)`, ms: res.ms });
 
-  // Check each folder structure
-  for (const f of folders) {
-    const detail = await client.getFolder(f.uid);
+  // Check each folder structure (limit to 20 to avoid timeout)
+  for (const f of folders.slice(0, 20)) {
+    const uid = f.uid || f.uid;
+    const title = f.title || f.name || uid;
+    const detail = await client.getFolder(uid);
     results.push({
-      name: `Folder: ${f.title}`, status: detail.ok ? 'PASS' : 'WARN', uid: f.uid,
+      name: `Folder: ${title}`, status: detail.ok ? 'PASS' : 'WARN', uid,
       detail: detail.ok ? `Accessible — created by: ${detail.data?.createdBy || 'unknown'}` : `Access error: HTTP ${detail.status}`,
       ms: detail.ms,
     });

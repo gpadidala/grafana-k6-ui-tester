@@ -27,16 +27,21 @@ export default function RunTestPage() {
   }
 
   async function handleRun() {
-    const url = useCustom ? customUrl : env?.grafanaUrl;
-    const token = useCustom ? customToken : env?.token;
-    if (!url) { alert('Enter a Grafana URL or configure the environment.'); return; }
+    const url = useCustom ? customUrl : (env?.grafanaUrl || '');
+    const token = useCustom ? customToken : (env?.token || '');
+
+    // If using environment mode with no URL configured, let backend use its own .env config
+    if (useCustom && !url) {
+      alert('Enter a Grafana URL.');
+      return;
+    }
 
     setRunning(true);
     setProgress([]);
     setReport(null);
 
     try {
-      const result = await runTests(url, token || '', selectedCats.length > 0 ? selectedCats : undefined, (evt) => {
+      const result = await runTests(url, token, selectedCats.length > 0 ? selectedCats : undefined, (evt) => {
         setProgress(prev => [...prev, evt]);
       });
       setReport(result);
