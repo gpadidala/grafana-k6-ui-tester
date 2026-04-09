@@ -9,6 +9,7 @@ const errorHandler = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
 const GrafanaClient = require('./services/grafanaClient');
 const PlaywrightRunner = require('./playwright/runner');
+const JMeterRunner = require('./jmeter/runner');
 
 // Initialize DB
 require('./db').getDb();
@@ -124,6 +125,25 @@ app.post('/api/playwright/run', async (req, res) => {
   }
 });
 
+// ─── JMeter Performance ───
+app.get('/api/jmeter/plans', (req, res) => { res.json(new JMeterRunner().getPlans()); });
+app.get('/api/jmeter/suites', (req, res) => { res.json(new JMeterRunner().getSuites()); });
+
+app.post('/api/jmeter/run', async (req, res) => {
+  const { grafanaUrl, token, plans, suite, threads, duration } = req.body;
+  const url = (grafanaUrl && grafanaUrl.trim()) || config.grafana.url;
+  const tok = (token && token.trim()) || config.grafana.token;
+  const jm = new JMeterRunner(url, tok);
+  const planIds = suite ? (SUITES || {})[suite] || plans : plans || jm.getPlans().map(p => p.id);
+
+  try {
+    const result = await jm.runPlans(planIds, { threads: threads || 20, duration: duration || 30 }, (evt) => io.emit('jm-progress', evt));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Screenshots ───
 app.use('/screenshots', express.static(path.resolve(config.paths.screenshots)));
 
@@ -139,6 +159,19 @@ io.on('connection', (socket) => {
 
     const report = await engine.runCategories(cats, url, tok, (evt) => socket.emit('test-progress', evt));
     socket.emit('test-complete', report);
+  });
+
+  socket.on('run-jmeter', async (data) => {
+    const { grafanaUrl, token, plans, threads, duration } = data || {};
+    const url = (grafanaUrl && grafanaUrl.trim()) || config.grafana.url;
+    const tok = (token && token.trim()) || config.grafana.token;
+    const jm = new JMeterRunner(url, tok);
+    try {
+      const result = await jm.runPlans(plans || jm.getPlans().map(p => p.id), { threads: threads || 20, duration: duration || 30 }, (evt) => socket.emit('jm-progress', evt));
+      socket.emit('jm-complete', result);
+    } catch (e) {
+      socket.emit('jm-complete', { status: 'failed', error: e.message });
+    }
   });
 
   socket.on('run-playwright', async (data) => {

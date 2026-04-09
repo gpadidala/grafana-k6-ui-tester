@@ -24,9 +24,32 @@ const LS_TOKEN_KEY = 'grafanaprobe_token';
 /* ───────────────────────── component ───────────────────────── */
 export default function TestRunnerPage() {
   /* ── state ── */
-  const [engine, setEngine] = useState('k6'); // 'k6' | 'playwright'
+  const [engine, setEngine] = useState('k6'); // 'k6' | 'playwright' | 'jmeter'
   const [categories, setCategories] = useState([]);
   const [selected, setSelected] = useState(new Set());
+
+  // JMeter state
+  const [jmPlans] = useState([
+    { id: 'api-health-load', name: 'API Health Load', icon: '💚', group: 'core', desc: 'Health endpoints under load' },
+    { id: 'auth-stress', name: 'Auth Stress', icon: '🔐', group: 'core', desc: 'Login throughput' },
+    { id: 'dashboard-load', name: 'Dashboard Load', icon: '📊', group: 'core', desc: 'Concurrent dashboard viewing' },
+    { id: 'ds-query-stress', name: 'DS Query Stress', icon: '🗄', group: 'core', desc: 'Query execution per DS type' },
+    { id: 'alert-eval', name: 'Alert Eval', icon: '🔔', group: 'core', desc: 'Alert pipeline performance' },
+    { id: 'plugin-api', name: 'Plugin API', icon: '🧩', group: 'core', desc: 'Plugin endpoints' },
+    { id: 'search-perf', name: 'Search Perf', icon: '🔍', group: 'core', desc: 'Search throughput' },
+    { id: 'mixed-workload', name: 'Mixed Workload', icon: '🌐', group: 'scenario', desc: 'Realistic simulation' },
+    { id: 'spike-test', name: 'Spike Test', icon: '⚡', group: 'scenario', desc: '20x traffic burst' },
+    { id: 'capacity-planning', name: 'Capacity Planning', icon: '📈', group: 'scenario', desc: 'Find breaking point' },
+    { id: 'deployment-check', name: 'Deployment Check', icon: '🚀', group: 'scenario', desc: 'Quick CI/CD validation' },
+    { id: 'k8s-dashboard', name: 'K8s Load', icon: '☸️', group: 'scenario', desc: 'K8s monitoring stress' },
+  ]);
+  const [jmSelected, setJmSelected] = useState(new Set());
+  const [jmThreads, setJmThreads] = useState(20);
+  const [jmDuration, setJmDuration] = useState(30);
+  const [jmPhase, setJmPhase] = useState('config');
+  const [jmLogs, setJmLogs] = useState([]);
+  const [jmResults, setJmResults] = useState(null);
+  const jmLogRef = useRef(null);
 
   // Playwright state
   const [pwSelected, setPwSelected] = useState(new Set());
@@ -616,6 +639,10 @@ export default function TestRunnerPage() {
           <span style={{ fontSize: 18 }}>🎭</span> Playwright E2E
           <span style={{ fontSize: 11, opacity: 0.7, fontWeight: 400 }}>({PLAYWRIGHT_SUITES.length} suites)</span>
         </button>
+        <button style={engineTabStyle(engine === 'jmeter')} onClick={() => setEngine('jmeter')}>
+          <span style={{ fontSize: 18 }}>🔥</span> JMeter Performance
+          <span style={{ fontSize: 11, opacity: 0.7, fontWeight: 400 }}>({jmPlans.length} plans)</span>
+        </button>
       </div>
 
       {/* ── Playwright Mode ── */}
@@ -739,6 +766,112 @@ export default function TestRunnerPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── JMeter Mode ── */}
+      {engine === 'jmeter' && (
+        <div style={{ marginBottom: 32 }}>
+          <div style={st.sectionLabel}>Select Performance Test Plans</div>
+          <div style={{ ...st.catGrid, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {jmPlans.map(plan => {
+              const isSel = jmSelected.has(plan.id);
+              return (
+                <div key={plan.id} style={{
+                  padding: '14px 16px', backgroundColor: isSel ? 'rgba(249,115,22,0.1)' : '#111827',
+                  border: `1.5px solid ${isSel ? '#f97316' : '#1e293b'}`, borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s ease',
+                }} onClick={() => setJmSelected(prev => { const n = new Set(prev); n.has(plan.id) ? n.delete(plan.id) : n.add(plan.id); return n; })}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontSize: 20 }}>{plan.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', flex: 1 }}>{plan.name}</span>
+                    <span style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${isSel ? '#f97316' : '#374151'}`, backgroundColor: isSel ? '#f97316' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff' }}>{isSel ? '✓' : ''}</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{plan.desc}</p>
+                  <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>{plan.group}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+            <button style={st.bulkBtn} onClick={() => setJmSelected(new Set(jmPlans.map(p => p.id)))}>Select All</button>
+            <button style={st.bulkBtn} onClick={() => setJmSelected(new Set())}>Deselect All</button>
+            <span style={{ fontSize: 13, color: '#94a3b8', marginLeft: 8 }}>{jmSelected.size}/{jmPlans.length}</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+              <label style={{ fontSize: 12, color: '#94a3b8' }}>Threads:</label>
+              <input type="number" value={jmThreads} onChange={e => setJmThreads(Number(e.target.value))} style={{ ...st.input, width: 80, padding: '6px 10px' }} />
+              <label style={{ fontSize: 12, color: '#94a3b8' }}>Duration (s):</label>
+              <input type="number" value={jmDuration} onChange={e => setJmDuration(Number(e.target.value))} style={{ ...st.input, width: 80, padding: '6px 10px' }} />
+            </div>
+          </div>
+
+          <button style={{ ...st.runBtn, background: 'linear-gradient(135deg, #f97316, #ef4444)', boxShadow: '0 0 20px rgba(249,115,22,0.35)', cursor: jmSelected.size === 0 || jmPhase === 'running' ? 'not-allowed' : 'pointer', opacity: jmSelected.size === 0 || jmPhase === 'running' ? 0.6 : 1 }}
+            disabled={jmSelected.size === 0 || jmPhase === 'running'}
+            onClick={() => {
+              setJmPhase('running'); setJmResults(null); setJmLogs([]);
+              const socket = getSocket();
+              socket.off('jm-progress'); socket.off('jm-complete');
+              socket.on('jm-progress', evt => {
+                if (evt.type === 'jm_plan_start') setJmLogs(p => [...p, { text: `🔥 ▶ ${evt.planName} starting...`, color: '#f97316' }]);
+                if (evt.type === 'jm_sample') setJmLogs(p => [...p, { text: `  ${evt.success ? '✓' : '✗'} ${evt.label} ${evt.ms}ms [${evt.status}]`, color: evt.success ? '#10b981' : '#ef4444' }]);
+                if (evt.type === 'jm_plan_done') setJmLogs(p => [...p, { text: `🔥 ■ ${evt.planId} — ${evt.result?.summary?.total || 0} samples, ${evt.result?.summary?.avgMs || 0}ms avg, ${evt.result?.summary?.errorRate}`, color: evt.result?.status === 'PASS' ? '#10b981' : '#ef4444' }]);
+              });
+              socket.on('jm-complete', data => { setJmPhase('done'); setJmResults(data); });
+              socket.emit('run-jmeter', { grafanaUrl, token, plans: Array.from(jmSelected), threads: jmThreads, duration: jmDuration });
+            }}>
+            {jmPhase === 'running' && <span style={st.spinner} />}
+            {jmPhase === 'running' ? 'Running Performance Tests...' : `🔥 Run ${jmSelected.size || 'All'} Performance Plans`}
+          </button>
+
+          {/* Live + Results */}
+          {(jmPhase === 'running' || jmPhase === 'done') && (
+            <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: jmResults ? '1fr 1fr' : '1fr', gap: 20 }}>
+              <div>
+                <div style={st.logPanelTitle}>🔥 JMeter Live Log</div>
+                <div style={st.logPanel} ref={jmLogRef}>
+                  {jmLogs.map((l, i) => <div key={i} style={{ color: l.color || '#94a3b8', whiteSpace: 'pre-wrap' }}>{l.text}</div>)}
+                  {jmPhase === 'running' && <div style={{ color: '#f97316', animation: 'trFadeIn 0.5s ease' }}>Running...</div>}
+                </div>
+              </div>
+              {jmResults && (
+                <div>
+                  <div style={st.logPanelTitle}>Performance Summary — {jmResults.summary?.errorRate} error rate</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+                    {[
+                      { label: 'Avg RT', value: `${jmResults.summary?.avgResponseTime || 0}ms`, color: '#3b82f6' },
+                      { label: 'p95', value: `${jmResults.summary?.p95 || 0}ms`, color: '#eab308' },
+                      { label: 'p99', value: `${jmResults.summary?.p99 || 0}ms`, color: '#ef4444' },
+                      { label: 'Throughput', value: jmResults.summary?.throughput || '0', color: '#10b981' },
+                      { label: 'Total Reqs', value: jmResults.summary?.totalRequests || 0, color: '#818cf8' },
+                      { label: 'Error Rate', value: jmResults.summary?.errorRate || '0%', color: '#ef4444' },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: 12, textAlign: 'center' }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: m.color }}>{m.value}</div>
+                        <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase' }}>{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {(jmResults.plans || []).map(plan => (
+                    <div key={plan.id} style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: '10px 14px', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span><span style={{ marginRight: 6 }}>{plan.icon}</span><strong style={{ color: '#e2e8f0', fontSize: 13 }}>{plan.name}</strong></span>
+                        <StatusBadge status={plan.status} size="sm" />
+                      </div>
+                      {plan.summary && (
+                        <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: '#94a3b8' }}>
+                          <span>{plan.summary.total} samples</span>
+                          <span>avg {plan.summary.avgMs}ms</span>
+                          <span>p95 {plan.summary.p95}ms</span>
+                          <span style={{ color: '#10b981' }}>{plan.summary.throughput}</span>
+                          <span style={{ color: parseFloat(plan.summary.errorRate) > 1 ? '#ef4444' : '#94a3b8' }}>{plan.summary.errorRate} errors</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
