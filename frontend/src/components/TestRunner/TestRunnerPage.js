@@ -27,6 +27,13 @@ export default function TestRunnerPage() {
   const [engine, setEngine] = useState('k6'); // 'k6' | 'playwright'
   const [categories, setCategories] = useState([]);
   const [selected, setSelected] = useState(new Set());
+
+  // Playwright state
+  const [pwSelected, setPwSelected] = useState(new Set());
+  const [pwPhase, setPwPhase] = useState('config');
+  const [pwLogs, setPwLogs] = useState([]);
+  const [pwResults, setPwResults] = useState(null);
+  const pwLogRef = useRef(null);
   const [grafanaUrl, setGrafanaUrl] = useState('');
   const [token, setToken] = useState('');
   const [phase, setPhase] = useState('config'); // config | running | done
@@ -614,54 +621,126 @@ export default function TestRunnerPage() {
       {/* ── Playwright Mode ── */}
       {engine === 'playwright' && (
         <div style={{ marginBottom: 32 }}>
-          <div style={st.sectionLabel}>Playwright E2E Suites</div>
+          <div style={st.sectionLabel}>Select E2E Suites</div>
           <div style={{ ...st.catGrid, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            {PLAYWRIGHT_SUITES.map((suite, idx) => (
-              <div key={suite.id} style={{
-                padding: '16px 18px',
-                backgroundColor: '#111827',
-                border: '1.5px solid #1e293b',
-                borderRadius: 12,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e293b'; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <span style={{ fontSize: 22 }}>{suite.icon}</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e2e8f0' }}>{suite.name}</span>
+            {PLAYWRIGHT_SUITES.map((suite) => {
+              const isSel = pwSelected.has(suite.id);
+              return (
+                <div key={suite.id} style={{
+                  padding: '14px 16px',
+                  backgroundColor: isSel ? 'rgba(99,102,241,0.1)' : '#111827',
+                  border: `1.5px solid ${isSel ? '#6366f1' : '#1e293b'}`,
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                  onClick={() => setPwSelected(prev => { const n = new Set(prev); n.has(suite.id) ? n.delete(suite.id) : n.add(suite.id); return n; })}
+                  onMouseEnter={e => { if (!isSel) e.currentTarget.style.borderColor = '#374151'; }}
+                  onMouseLeave={e => { if (!isSel) e.currentTarget.style.borderColor = '#1e293b'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontSize: 20 }}>{suite.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', flex: 1 }}>{suite.name}</span>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: 6,
+                      border: `2px solid ${isSel ? '#6366f1' : '#374151'}`,
+                      backgroundColor: isSel ? '#6366f1' : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, color: '#fff',
+                    }}>{isSel ? '✓' : ''}</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{suite.desc}</p>
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{suite.desc}</p>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+            <button style={st.bulkBtn} onClick={() => setPwSelected(new Set(PLAYWRIGHT_SUITES.map(s => s.id)))}>Select All</button>
+            <button style={st.bulkBtn} onClick={() => setPwSelected(new Set())}>Deselect All</button>
+            <span style={{ fontSize: 13, color: '#94a3b8', lineHeight: '32px', marginLeft: 8 }}>{pwSelected.size} of {PLAYWRIGHT_SUITES.length} selected</span>
+          </div>
+
+          {/* Run Button */}
+          <button
+            style={{ ...st.runBtn, cursor: pwSelected.size === 0 || pwPhase === 'running' ? 'not-allowed' : 'pointer', opacity: pwSelected.size === 0 || pwPhase === 'running' ? 0.6 : 1 }}
+            disabled={pwSelected.size === 0 || pwPhase === 'running'}
+            onClick={() => {
+              setPwPhase('running');
+              setPwResults(null);
+              setPwLogs([]);
+              const socket = getSocket();
+              socket.off('pw-progress');
+              socket.off('pw-complete');
+              socket.on('pw-progress', (evt) => {
+                if (evt.type === 'pw_suite_start') setPwLogs(p => [...p, { text: `🎭 ▶ ${evt.suiteName} starting...`, color: '#6366f1' }]);
+                if (evt.type === 'pw_test_result' && evt.test) {
+                  const icon = evt.test.status === 'PASS' ? '✓' : evt.test.status === 'FAIL' ? '✗' : '⚠';
+                  const color = evt.test.status === 'PASS' ? '#10b981' : evt.test.status === 'FAIL' ? '#ef4444' : '#eab308';
+                  setPwLogs(p => [...p, { text: `  ${icon} ${evt.test.name} (${evt.test.ms || 0}ms)`, color }]);
+                }
+                if (evt.type === 'pw_suite_done') setPwLogs(p => [...p, { text: `🎭 ■ ${evt.result?.name} — ${evt.result?.summary?.passed}/${evt.result?.summary?.total} passed`, color: evt.result?.status === 'PASS' ? '#10b981' : '#ef4444' }]);
+              });
+              socket.on('pw-complete', (data) => { setPwPhase('done'); setPwResults(data); });
+              socket.emit('run-playwright', { grafanaUrl, token, suites: Array.from(pwSelected) });
+            }}
+          >
+            {pwPhase === 'running' && <span style={st.spinner} />}
+            {pwPhase === 'running' ? 'Running Playwright E2E...' : `🎭 Run ${pwSelected.size || 'All'} E2E Suites`}
+          </button>
+
+          {/* Live logs */}
+          {(pwPhase === 'running' || pwPhase === 'done') && (
+            <div style={{ marginTop: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: pwResults ? '1fr 1fr' : '1fr', gap: 20 }}>
+                <div>
+                  <div style={st.logPanelTitle}>🎭 Playwright Live Log</div>
+                  <div style={st.logPanel} ref={pwLogRef}>
+                    {pwLogs.map((l, i) => <div key={i} style={{ color: l.color || '#94a3b8', whiteSpace: 'pre-wrap' }}>{l.text}</div>)}
+                    {pwPhase === 'running' && <div style={{ color: '#6366f1', animation: 'trFadeIn 0.5s ease' }}>Running...</div>}
+                  </div>
+                </div>
+
+                {/* Results summary */}
+                {pwResults && (
+                  <div>
+                    <div style={st.logPanelTitle}>Results — {pwResults.summary?.pass_rate}</div>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: 14, textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#3b82f6' }}>{pwResults.summary?.total || 0}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>Total</div>
+                      </div>
+                      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: 14, textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#10b981' }}>{pwResults.summary?.passed || 0}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>Passed</div>
+                      </div>
+                      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: 14, textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#ef4444' }}>{pwResults.summary?.failed || 0}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>Failed</div>
+                      </div>
+                    </div>
+                    {(pwResults.suites || []).map(s => (
+                      <div key={s.id} style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span><span style={{ marginRight: 8 }}>{s.icon}</span><strong style={{ color: '#e2e8f0' }}>{s.name}</strong></span>
+                          <StatusBadge status={s.status} size="sm" />
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          {(s.tests || []).map((t, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12 }}>
+                              <StatusBadge status={t.status} size="sm" />
+                              <span style={{ color: '#e2e8f0' }}>{t.name}</span>
+                              {t.ms && <span style={{ color: '#94a3b8', marginLeft: 'auto' }}>{t.ms}ms</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-          <div style={{
-            padding: '20px',
-            backgroundColor: '#111827',
-            border: '1px solid #1e293b',
-            borderRadius: 12,
-            marginTop: 16,
-            textAlign: 'center',
-          }}>
-            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 12 }}>
-              Playwright E2E tests require Playwright installed: <code style={{ color: '#818cf8', backgroundColor: '#0f172a', padding: '2px 6px', borderRadius: 4 }}>npx playwright install chromium</code>
-            </p>
-            <button style={{
-              padding: '10px 24px',
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#fff',
-              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
-              border: 'none',
-              borderRadius: 10,
-              cursor: 'pointer',
-              boxShadow: '0 0 16px rgba(99,102,241,0.3)',
-              opacity: 0.5,
-            }} disabled>
-              🎭 Coming Soon — Playwright Integration
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
 

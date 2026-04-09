@@ -8,6 +8,7 @@ const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
 const GrafanaClient = require('./services/grafanaClient');
+const PlaywrightRunner = require('./playwright/runner');
 
 // Initialize DB
 require('./db').getDb();
@@ -88,6 +89,41 @@ app.get('/api/reports/html/:file', (req, res) => {
   res.sendFile(path.resolve(fp));
 });
 
+// ─── Playwright E2E ───
+app.get('/api/playwright/suites', (req, res) => {
+  const pw = new PlaywrightRunner();
+  res.json(pw.getSuites());
+});
+
+app.post('/api/playwright/run', async (req, res) => {
+  const { grafanaUrl, token, suites } = req.body;
+  const url = (grafanaUrl && grafanaUrl.trim()) || config.grafana.url;
+  const tok = (token && token.trim()) || config.grafana.token;
+  const pw = new PlaywrightRunner(url, tok);
+
+  try {
+    const results = await pw.runSuites(
+      suites || pw.getSuites().map(s => s.id),
+      (evt) => io.emit('pw-progress', evt)
+    );
+
+    const allTests = results.flatMap(s => s.tests || []);
+    const summary = {
+      total: allTests.length,
+      passed: allTests.filter(t => t.status === 'PASS').length,
+      failed: allTests.filter(t => t.status === 'FAIL').length,
+      warnings: allTests.filter(t => t.status === 'WARN').length,
+    };
+    summary.pass_rate = summary.total > 0 ? `${((summary.passed / summary.total) * 100).toFixed(1)}%` : '0%';
+
+    res.json({ status: summary.failed > 0 ? 'failed' : 'passed', summary, suites: results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  } finally {
+    await pw.close();
+  }
+});
+
 // ─── Screenshots ───
 app.use('/screenshots', express.static(path.resolve(config.paths.screenshots)));
 
@@ -103,6 +139,24 @@ io.on('connection', (socket) => {
 
     const report = await engine.runCategories(cats, url, tok, (evt) => socket.emit('test-progress', evt));
     socket.emit('test-complete', report);
+  });
+
+  socket.on('run-playwright', async (data) => {
+    const { grafanaUrl, token, suites } = data || {};
+    const url = (grafanaUrl && grafanaUrl.trim()) || config.grafana.url;
+    const tok = (token && token.trim()) || config.grafana.token;
+    const pw = new PlaywrightRunner(url, tok);
+    try {
+      const results = await pw.runSuites(suites || pw.getSuites().map(s => s.id), (evt) => socket.emit('pw-progress', evt));
+      const allTests = results.flatMap(s => s.tests || []);
+      const summary = { total: allTests.length, passed: allTests.filter(t => t.status === 'PASS').length, failed: allTests.filter(t => t.status === 'FAIL').length };
+      summary.pass_rate = summary.total > 0 ? `${((summary.passed / summary.total) * 100).toFixed(1)}%` : '0%';
+      socket.emit('pw-complete', { status: summary.failed > 0 ? 'failed' : 'passed', summary, suites: results });
+    } catch (e) {
+      socket.emit('pw-complete', { status: 'failed', error: e.message, suites: [] });
+    } finally {
+      await pw.close();
+    }
   });
 
   socket.on('disconnect', () => logger.info(`Client disconnected: ${socket.id}`));
