@@ -136,6 +136,23 @@ class TestEngine {
       return JSON.parse(fs.readFileSync(path.join(this.reportsDir, file), 'utf-8'));
     } catch { return null; }
   }
+
+  deleteReport(file) {
+    try {
+      const fp = path.join(this.reportsDir, file);
+      if (!fs.existsSync(fp)) return false;
+      fs.unlinkSync(fp);
+      return true;
+    } catch { return false; }
+  }
+
+  deleteAllReports() {
+    try {
+      const files = fs.readdirSync(this.reportsDir).filter(f => f.endsWith('.json'));
+      files.forEach(f => fs.unlinkSync(path.join(this.reportsDir, f)));
+      return files.length;
+    } catch { return 0; }
+  }
 }
 
 module.exports = TestEngine;

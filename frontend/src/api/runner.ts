@@ -91,3 +91,13 @@ export async function getReport(file: string): Promise<any> {
   if (!res.ok) throw new Error(`Report not found: ${res.status}`);
   return res.json();
 }
+
+export async function deleteReport(file: string): Promise<void> {
+  await fetch(`${API_BASE}/api/reports/${file}`, { method: 'DELETE' });
+}
+
+export async function deleteAllReports(): Promise<number> {
+  const res = await fetch(`${API_BASE}/api/reports`, { method: 'DELETE' });
+  const data = await res.json();
+  return data.deleted || 0;
+}

@@ -72,6 +72,19 @@ app.get('/api/reports/:file', (req, res) => {
   res.json(report);
 });
 
+// Delete single report
+app.delete('/api/reports/:file', (req, res) => {
+  const ok = engine.deleteReport(req.params.file);
+  if (!ok) return res.status(404).json({ error: 'Report not found' });
+  res.json({ deleted: true });
+});
+
+// Delete all reports
+app.delete('/api/reports', (req, res) => {
+  const count = engine.deleteAllReports();
+  res.json({ deleted: count });
+});
+
 // ─── Socket.IO ───
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
