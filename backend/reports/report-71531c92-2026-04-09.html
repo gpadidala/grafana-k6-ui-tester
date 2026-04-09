@@ -1,0 +1,682 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Grafana Test Report</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f1419;color:#e1e8ed;padding:24px}</style></head><body>
+<div style="text-align:center;padding:30px;background:linear-gradient(135deg,#1a1f2e,#2d3748);border-radius:12px;margin-bottom:24px">
+  <h1 style="font-size:24px;color:#fff;margin-bottom:8px">Grafana UI Test Report</h1>
+  <p style="color:#8899a6;font-size:13px">http://localhost:3200 | 4/8/2026, 5:40:43 PM</p>
+  <p style="color:#8899a6;font-size:11px;margin-top:6px">by Gopal Rao</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;text-align:center"><p style="color:#8899a6;font-size:11px;text-transform:uppercase;letter-spacing:1px">Total</p><p style="font-size:28px;font-weight:bold;color:#3b82f6">109</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;text-align:center"><p style="color:#8899a6;font-size:11px;text-transform:uppercase;letter-spacing:1px">Passed</p><p style="font-size:28px;font-weight:bold;color:#22c55e">109</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;text-align:center"><p style="color:#8899a6;font-size:11px;text-transform:uppercase;letter-spacing:1px">Failed</p><p style="font-size:28px;font-weight:bold;color:#ef4444">0</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;text-align:center"><p style="color:#8899a6;font-size:11px;text-transform:uppercase;letter-spacing:1px">Warnings</p><p style="font-size:28px;font-weight:bold;color:#eab308">0</p></div>
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;text-align:center"><p style="color:#8899a6;font-size:11px;text-transform:uppercase;letter-spacing:1px">Pass Rate</p><p style="font-size:28px;font-weight:bold;color:#22c55e">100.0%</p></div>
+</div>
+<div style="text-align:center;padding:16px;border-radius:10px;font-size:20px;font-weight:bold;margin-bottom:24px;background:linear-gradient(135deg,#064e3b,#065f46);color:#22c55e;border:2px solid #22c55e">
+  PASSED — 100.0% pass rate
+</div>
+<div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#1a1f2e;border-radius:8px;margin-bottom:4px">
+          <span style="font-size:15px"><span style="margin-right:8px">📊</span><strong style="color:#fff">Dashboards</strong> <span style="color:#8899a6;font-size:12px;margin-left:8px">109/109</span></span>
+          <span style="color:#22c55e;font-weight:600;font-size:13px">PASS</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">1</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Fetch Dashboards</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">39ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Found 108 dashboard(s)</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">2</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Advanced PostgreSQL Monitoring — ESOBF Dev</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">14ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">71 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">3</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: AKS — Cluster Overview & Health</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">8ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">24 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">4</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: AKS — Network & Service Mesh</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">5</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: AKS — Node Resource Deep Dive</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">6</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: AKS — Pod & Workload Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">7</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: AKS — Storage & Persistent Volumes</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">17 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">8</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Application Overview — Four Signal Correlation</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">17 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">9</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — AKS Kubernetes Cluster</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">10</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Alert Rules & Threshold Status</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">11</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — App Service & Web Apps</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">12</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Application Insights (APM)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">13</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Cosmos DB Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">14</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Cost & Capacity Planning</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">15</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Event Hubs Monitoring</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">16</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Executive KPI Dashboard</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">17</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Functions (Serverless)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">18</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Golden Signals (RED/USE Method)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">19</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Key Vault Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">20</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Log Analytics & KQL Workbench</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">21</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Networking & Load Balancer</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">22</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Platform Health Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">37 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">23</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Redis Cache Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">24</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Service Bus Monitoring</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">25</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — SQL Database Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">17ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">26</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Storage Account Monitoring</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">27</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Azure — Virtual Machines Monitoring</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">8ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">28</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Cross-Signal Volume & Growth Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">29</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Cross-Stack Capacity Planning — Multi-Cluster</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">30</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Admin — Access & Security Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">12ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">31</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Admin — Command Center</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">29 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">32</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Admin — Database & Performance Deep Dive</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">33</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Admin — Errors, Requests & API Health</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">30 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">34</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Admin — User Activity & Audit Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">32 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">35</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Alerting — Advanced Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">27 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">36</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Alerts — Overview & Management</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">26 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">37</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana Annotations — Admin & Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">28 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">38</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Grafana — Volume & Traffic Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">39</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Home</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">5 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">40</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L0 — Executive Command Center</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">41</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L1-A — Infrastructure Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">42</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L1-B — Application Performance Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">43</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L1-C — Continuous Profiling Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">44</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L2 — Service Golden Signals</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">24 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">45</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L3-A — Trace Explorer</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">46</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L3-B — Log Explorer</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">4ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">47</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L3-C — Profile Explorer</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">48</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: L3-D — Kubernetes Debug</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">49</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: LGTM Stack Health — Multi-Cluster Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">50</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: LGTM Stack — Anomaly Detection & Outlier Analysis</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">51</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: LGTM Stack — Predictive Capacity Forecasting</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">10 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">52</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: LGTM Stack — Service Health Matrix</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">53</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: LGTM Stack — Unified Volume Summary</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">54</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Log Query Experience – Executive Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">55</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Loki Admin — Errors, Rejections & Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">56</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Loki Deep Dive — Multi-Stack Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">57</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Loki — Log Ingestion & Volume Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">26 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">58</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Loki — Logs Deep Dive & Pattern Analysis</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">59</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Loki — Volume & Throughput Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">9ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">60</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Mimir Admin — Errors, Rejections & Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">61</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Mimir Deep Dive — Multi-Stack Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">62</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Mimir — Infrastructure & USE Metrics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">63</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Mimir — Metrics Ingestion & Cardinality Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">26 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">64</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Mimir — Volume & Throughput Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">28 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">65</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Multi-Tenant Analytics — LGTM Stack</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">10 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">66</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Observability Platform — Executive Summary</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">20 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">67</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Observability Platform — Home</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">68</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI + ServiceNow — Incident Correlation</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">23 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">69</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Alerts — Threshold Monitoring & Alert Status</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">25 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">70</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Application Performance — Full Stack</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">24 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">71</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Application — HTTP & Service Metrics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">24 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">72</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Audit & Security — Event Analysis</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">73</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Block Storage — Volume Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">74</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Compute — Instance Deep Dive</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">75</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Compute — Instance Monitoring</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">76</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Cost & Capacity Planning</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">20 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">77</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Cost & Resource Optimization</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">17 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">78</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Database — ATP/ADW/DBCS Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">79</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Executive KPI — Leadership Dashboard</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">26 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">80</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI File Storage — NFS Performance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">81</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Golden Signals — RED/USE Method</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">25 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">82</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Kubernetes (OKE) — Cluster Health</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">83</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Logs — Analytics Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">84</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Logs — OKE Container & Pod Logs</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">85</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Logs — VCN Flow Log Analysis</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">86</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Multi-Service Correlation</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">87</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Networking — VCN, LB & Traffic Analysis</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">88</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Object Storage — Buckets & Requests</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">89</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: OCI Security & Compliance — Audit Deep Dive</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">20 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">90</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Platform KPI — Single Pane of Glass</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">21 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">91</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Platform Read QoS – Mimir (Executive)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">92</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Platform UI QoS – Executive Overview</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">93</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Platform Write QoS – Loki (Executive)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">15 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">94</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Platform Write QoS – Mimir (Executive)</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">18 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">95</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Pyroscope Admin — Errors, Rejections & Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">7ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">96</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Pyroscope Deep Dive — Multi-Stack Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">97</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Pyroscope — Continuous Profiling & Flamegraphs</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">14 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">98</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Pyroscope — Profile Ingestion & Storage Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">11 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">99</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Pyroscope — Volume & Throughput Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">26 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">100</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Risk & Incident Intelligence</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">13 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">101</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: SLA & Business Impact Report</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">102</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: SLO / SLI — Error Budget & Compliance</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">16 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">103</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: SLO Error Budget Burn Rate — Multi-Stack</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">19 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">104</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Tempo Admin -- Errors, Rejections & Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">17 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">105</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Tempo Deep Dive — Multi-Stack Operations</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">12 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">106</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Tempo — Distributed Tracing & Service Graph</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">22 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">107</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Tempo — Trace Ingestion & Throughput Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">23 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">108</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: Tempo — Volume & Throughput Analytics</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">5ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">25 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr><tr style="border-bottom:1px solid #2d3748">
+          <td style="padding:6px 12px;color:#8899a6">109</td>
+          <td style="padding:6px 12px;color:#e1e8ed">Dashboard: User Journey & Activity — Full Stack Correlation</td>
+          <td style="padding:6px 12px"><span style="background:#064e3b;color:#22c55e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">PASS</span></td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px">6ms</td>
+          <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">17 panels, created by Anonymous, last updated 2026-04-08</td>
+        </tr></table>
+      </div>
+<div style="text-align:center;padding:16px;color:#8899a6;font-size:11px;margin-top:24px">
+  <span style="color:#60a5fa;font-weight:600">Gopal Rao</span> | Grafana k6 UI Tester | 2026-04-09T00:40:44.264Z
+</div>
+</body></html>

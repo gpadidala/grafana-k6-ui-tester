@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import AIAnalysis from '../components/AIAnalysis';
 import { getReports, getReport, deleteReport, deleteAllReports } from '../api/runner';
+import { grafanaLink } from '../api/links';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
@@ -192,16 +193,28 @@ export default function HistoryPage() {
                   <div className="mt-1 space-y-0">
                     <table className="w-full text-sm ml-6">
                       <tbody>
-                        {(cat.tests || []).map((t: any, i: number) => (
-                          <tr key={i} className="border-b border-surface-300/20 hover:bg-surface-200 transition">
-                            <td className="py-1.5 pr-3 w-8">
-                              <StatusBadge status={t.status} />
-                            </td>
-                            <td className="py-1.5 pr-3 text-white">{t.name}</td>
-                            <td className="py-1.5 pr-3 text-xs text-muted w-16">{t.ms ? `${t.ms}ms` : ''}</td>
-                            <td className="py-1.5 text-xs text-muted max-w-md truncate">{t.detail || '-'}</td>
-                          </tr>
-                        ))}
+                        {(cat.tests || []).map((t: any, i: number) => {
+                          const link = grafanaLink(selectedReport.grafanaUrl || '', cat.id, t.uid);
+                          return (
+                            <tr key={i} className="border-b border-surface-300/20 hover:bg-surface-200 transition">
+                              <td className="py-1.5 pr-3 w-8">
+                                <StatusBadge status={t.status} />
+                              </td>
+                              <td className="py-1.5 pr-3">
+                                {link ? (
+                                  <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{t.name}</a>
+                                ) : (
+                                  <span className="text-white">{t.name}</span>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-3 text-xs text-muted w-16">{t.ms ? `${t.ms}ms` : ''}</td>
+                              <td className="py-1.5 pr-3 text-xs text-muted max-w-sm truncate">{t.detail || '-'}</td>
+                              <td className="py-1.5 w-12">
+                                {link && <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">Open ↗</a>}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

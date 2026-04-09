@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import AIAnalysis from '../components/AIAnalysis';
-// Icons come from backend categories now
+import { grafanaLink } from '../api/links';
 import { getEnvironments } from '../api/store';
 import { runTests, getCategories, CategoryInfo } from '../api/runner';
 
@@ -296,14 +296,23 @@ export default function RunTestPage() {
                   <StatusBadge status={cat.status} />
                 </summary>
                 <div className="mt-1 ml-6 space-y-0.5">
-                  {(cat.tests || []).map((t: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 py-1 text-sm">
-                      <StatusBadge status={t.status} />
-                      <span className="text-white">{t.name}</span>
-                      {t.ms && <span className="text-xs text-muted">{t.ms}ms</span>}
-                      <span className="text-xs text-muted truncate max-w-md ml-auto">{t.detail}</span>
-                    </div>
-                  ))}
+                  {(cat.tests || []).map((t: any, i: number) => {
+                    const url = useCustom ? customUrl : (env?.grafanaUrl || '');
+                    const link = grafanaLink(url || report?.grafanaUrl || '', cat.id, t.uid);
+                    return (
+                      <div key={i} className="flex items-center gap-2 py-1 text-sm">
+                        <StatusBadge status={t.status} />
+                        {link ? (
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{t.name}</a>
+                        ) : (
+                          <span className="text-white">{t.name}</span>
+                        )}
+                        {t.ms && <span className="text-xs text-muted">{t.ms}ms</span>}
+                        <span className="text-xs text-muted truncate max-w-md ml-auto">{t.detail}</span>
+                        {link && <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline shrink-0">Open ↗</a>}
+                      </div>
+                    );
+                  })}
                 </div>
               </details>
             ))}

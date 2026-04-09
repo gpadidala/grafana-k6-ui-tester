@@ -122,19 +122,47 @@ class TestEngine {
     return report;
   }
 
+  // Build Grafana deep-link for a test result
+  grafanaLink(baseUrl, categoryId, test) {
+    const uid = test.uid;
+    if (!uid) return '';
+    switch (categoryId) {
+      case 'dashboards': return `${baseUrl}/d/${uid}`;
+      case 'panels':     return `${baseUrl}/d/${uid}`;
+      case 'folders':    return `${baseUrl}/dashboards/f/${uid}`;
+      case 'datasources': return `${baseUrl}/datasources/edit/${uid}`;
+      case 'alerts':     return `${baseUrl}/alerting/${uid}/edit`;
+      case 'plugins':    return `${baseUrl}/plugins/${uid}`;
+      case 'app-plugins': return `${baseUrl}/plugins/${uid}`;
+      case 'users':      return `${baseUrl}/admin/users`;
+      case 'links':      return `${baseUrl}/d/${uid}`;
+      case 'annotations': return `${baseUrl}/d/${uid}`;
+      default: return '';
+    }
+  }
+
   generateHtml(report) {
     const s = report.summary;
+    const base = report.grafanaUrl || '';
     const passColor = parseFloat(s.pass_rate) >= 90 ? '#22c55e' : '#ef4444';
     const catRows = (report.categories || []).map(c => {
       const testRows = (c.tests || []).map((t, i) => {
         const sc = t.status === 'PASS' ? '#064e3b' : t.status === 'FAIL' ? '#450a0a' : '#422006';
         const tc = t.status === 'PASS' ? '#22c55e' : t.status === 'FAIL' ? '#ef4444' : '#eab308';
+        const link = this.grafanaLink(base, c.id, t);
+        const nameHtml = link
+          ? `<a href="${link}" target="_blank" style="color:#60a5fa;text-decoration:none">${t.name}</a>`
+          : `<span style="color:#e1e8ed">${t.name}</span>`;
+        const linkHtml = link
+          ? `<a href="${link}" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px">Open ↗</a>`
+          : '';
         return `<tr style="border-bottom:1px solid #2d3748">
           <td style="padding:6px 12px;color:#8899a6">${i + 1}</td>
-          <td style="padding:6px 12px;color:#e1e8ed">${t.name}</td>
+          <td style="padding:6px 12px">${nameHtml}</td>
           <td style="padding:6px 12px"><span style="background:${sc};color:${tc};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${t.status}</span></td>
           <td style="padding:6px 12px;color:#8899a6;font-size:12px">${t.ms ? t.ms + 'ms' : ''}</td>
           <td style="padding:6px 12px;color:#8899a6;font-size:12px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.detail || '-'}</td>
+          <td style="padding:6px 12px">${linkHtml}</td>
         </tr>`;
       }).join('');
 
