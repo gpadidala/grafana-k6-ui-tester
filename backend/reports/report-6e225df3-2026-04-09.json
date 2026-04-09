@@ -1,0 +1,103 @@
+{
+  "id": "6e225df3-9d56-4dde-9023-f7c712c7c08d",
+  "grafanaUrl": "http://localhost:3200",
+  "startedAt": "2026-04-09T13:59:51.833Z",
+  "completedAt": "2026-04-09T13:59:51.970Z",
+  "status": "failed",
+  "categories": [
+    {
+      "id": "api-health",
+      "name": "API Health",
+      "icon": "💚",
+      "status": "WARN",
+      "tests": [
+        {
+          "name": "Grafana health endpoint",
+          "status": "PASS",
+          "detail": "Health responded 200 — database: ok",
+          "uid": null,
+          "ms": 1,
+          "metadata": {
+            "database": "ok",
+            "version": "11.6.4"
+          }
+        },
+        {
+          "name": "Authentication (current user)",
+          "status": "PASS",
+          "detail": "Authenticated as sa-1-admin (role: N/A)",
+          "uid": null,
+          "ms": 33,
+          "metadata": {
+            "login": "sa-1-admin",
+            "isGrafanaAdmin": false
+          }
+        },
+        {
+          "name": "API response time (10-sample)",
+          "status": "PASS",
+          "detail": "p50=1ms  p95=1ms  avg=1ms  min=0ms  max=1ms",
+          "uid": null,
+          "ms": 1,
+          "metadata": {
+            "p50": 1,
+            "p95": 1,
+            "avg": 1,
+            "min": 0,
+            "max": 1,
+            "samples": 10
+          }
+        },
+        {
+          "name": "Build info",
+          "status": "PASS",
+          "detail": "Grafana 11.6.4 (Open Source)",
+          "uid": null,
+          "ms": 26,
+          "metadata": {
+            "version": "11.6.4",
+            "edition": "Open Source",
+            "commit": "0567ef29beee0e82ea8d4da6cd4e3511d277324f",
+            "env": "production"
+          }
+        },
+        {
+          "name": "Current org access",
+          "status": "PASS",
+          "detail": "Org: Main Org. (id: 1)",
+          "uid": null,
+          "ms": 7,
+          "metadata": {
+            "orgId": 1,
+            "orgName": "Main Org."
+          }
+        },
+        {
+          "name": "Admin stats",
+          "status": "WARN",
+          "detail": "Admin stats not available (403): Request failed with status code 403",
+          "uid": null,
+          "ms": 6,
+          "metadata": {
+            "status": 403
+          }
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "passed": 5,
+        "failed": 0,
+        "warnings": 1
+      },
+      "duration_ms": 112
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 0,
+    "warnings": 1,
+    "pass_rate": "83.3%"
+  },
+  "grafanaVersion": "11.6.4"
+}

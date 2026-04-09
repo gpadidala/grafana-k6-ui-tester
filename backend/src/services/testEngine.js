@@ -64,7 +64,9 @@ class TestEngine {
 
       const catStart = Date.now();
       try {
-        const testResults = await cat.runner(client, null, { runId, ...options });
+        const mod = cat.runner;
+        const runFn = typeof mod === 'function' ? mod : mod.run;
+        const testResults = await runFn(client, null, { runId, ...options });
 
         for (const t of testResults) {
           if (onProgress) onProgress({ type: 'test_result', categoryId: catId, categoryName: cat.name, icon: cat.icon, test: t });
@@ -123,7 +125,13 @@ class TestEngine {
     return report;
   }
 
-  async getReports(limit = 50) { return ops.listRuns(limit); }
+  async getReports(limit = 50) {
+    const runs = await ops.listRuns(limit);
+    return runs.map(r => {
+      try { if (typeof r.summary === 'string') r.summary = JSON.parse(r.summary); } catch {}
+      return r;
+    });
+  }
   async getReport(fileOrId) {
     try {
       const fp = path.join(this.reportsDir, fileOrId);

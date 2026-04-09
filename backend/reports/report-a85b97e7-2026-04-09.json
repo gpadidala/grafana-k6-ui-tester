@@ -1,0 +1,188 @@
+{
+  "id": "a85b97e7-a24a-4ad0-9a4f-4623803f5984",
+  "grafanaUrl": "http://localhost:3200",
+  "startedAt": "2026-04-09T13:58:25.492Z",
+  "completedAt": "2026-04-09T13:58:25.626Z",
+  "status": "failed",
+  "categories": [
+    {
+      "id": "api-health",
+      "name": "API Health",
+      "icon": "💚",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "API Health Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "datasources",
+      "name": "Data Sources",
+      "icon": "🔌",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Data Sources Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "folders",
+      "name": "Folders",
+      "icon": "📁",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Folders Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "dashboards",
+      "name": "Dashboards",
+      "icon": "📊",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Dashboards Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "panels",
+      "name": "Panels",
+      "icon": "🔲",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Panels Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "alerts",
+      "name": "Alerts",
+      "icon": "🔔",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Alerts Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "plugins",
+      "name": "Plugins",
+      "icon": "🧩",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Plugins Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "users",
+      "name": "Users & Access",
+      "icon": "👥",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Users & Access Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "config-audit",
+      "name": "Config Audit",
+      "icon": "🔒",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "Config Audit Error",
+          "status": "FAIL",
+          "detail": "cat.runner is not a function"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "warnings": 0
+      }
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 0,
+    "failed": 9,
+    "warnings": 0,
+    "pass_rate": "0.0%"
+  },
+  "grafanaVersion": "11.6.4"
+}
