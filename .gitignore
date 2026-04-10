@@ -9,3 +9,4 @@ reports/*.html
 frontend/build/
 *.log
 .DS_Store
+backend/.snapshots/

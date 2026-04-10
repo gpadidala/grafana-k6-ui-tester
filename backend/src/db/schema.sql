@@ -125,3 +125,71 @@ CREATE INDEX IF NOT EXISTS idx_dep_edges_target ON dep_graph_edges(target_id);
 CREATE INDEX IF NOT EXISTS idx_latency_run ON latency_measurements(run_id);
 CREATE INDEX IF NOT EXISTS idx_latency_dashboard ON latency_measurements(dashboard_uid);
 CREATE INDEX IF NOT EXISTS idx_screenshots_run ON screenshots(run_id);
+
+-- DSUD: Dashboard Snapshot & Upgrade Diff
+CREATE TABLE IF NOT EXISTS snapshots (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  environment TEXT,
+  grafana_version TEXT,
+  grafana_url TEXT,
+  dashboard_count INTEGER DEFAULT 0,
+  panel_count INTEGER DEFAULT 0,
+  plugin_count INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT,
+  storage_path TEXT,
+  manifest_checksum TEXT,
+  notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS snapshot_dashboards (
+  snapshot_id TEXT NOT NULL,
+  dashboard_uid TEXT NOT NULL,
+  title TEXT,
+  folder TEXT,
+  fingerprint TEXT,
+  panel_count INTEGER DEFAULT 0,
+  schema_version INTEGER,
+  PRIMARY KEY (snapshot_id, dashboard_uid),
+  FOREIGN KEY (snapshot_id) REFERENCES snapshots(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS snapshot_diffs (
+  id TEXT PRIMARY KEY,
+  baseline_snapshot_id TEXT NOT NULL,
+  current_snapshot_id TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  summary_json TEXT,
+  total_changes INTEGER DEFAULT 0,
+  critical_count INTEGER DEFAULT 0,
+  high_count INTEGER DEFAULT 0,
+  medium_count INTEGER DEFAULT 0,
+  low_count INTEGER DEFAULT 0,
+  info_count INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'pending_review',
+  FOREIGN KEY (baseline_snapshot_id) REFERENCES snapshots(id),
+  FOREIGN KEY (current_snapshot_id) REFERENCES snapshots(id)
+);
+
+CREATE TABLE IF NOT EXISTS snapshot_diff_items (
+  id TEXT PRIMARY KEY,
+  diff_id TEXT NOT NULL,
+  dashboard_uid TEXT,
+  dashboard_title TEXT,
+  panel_id INTEGER,
+  panel_title TEXT,
+  path TEXT,
+  change_type TEXT,
+  risk_level TEXT,
+  before_value TEXT,
+  after_value TEXT,
+  ai_explanation TEXT,
+  ai_recommendation TEXT,
+  acknowledged INTEGER DEFAULT 0,
+  FOREIGN KEY (diff_id) REFERENCES snapshot_diffs(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_snapshot_dashboards_snap ON snapshot_dashboards(snapshot_id);
+CREATE INDEX IF NOT EXISTS idx_snapshot_diff_items_diff ON snapshot_diff_items(diff_id);
+CREATE INDEX IF NOT EXISTS idx_snapshot_diff_items_risk ON snapshot_diff_items(diff_id, risk_level);

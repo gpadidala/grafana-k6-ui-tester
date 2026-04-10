@@ -150,6 +150,39 @@ const ops = {
     run(`INSERT INTO screenshots (id,run_id,test_id,resource_type,resource_id,file_path,file_size) VALUES (?,?,?,?,?,?,?)`,
       [id, runId, testId, resType, resId, filePath, fileSize]),
   getScreenshots: (limit = 50) => all(`SELECT * FROM screenshots ORDER BY created_at DESC LIMIT ?`, [limit]),
+
+  // DSUD: Snapshots
+  insertSnapshot: (id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, storagePath, checksum, notes, createdBy) =>
+    run(`INSERT INTO snapshots (id,name,environment,grafana_version,grafana_url,dashboard_count,panel_count,plugin_count,storage_path,manifest_checksum,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, storagePath, checksum, notes, createdBy]),
+  listSnapshots: (limit = 100) => all(`SELECT * FROM snapshots ORDER BY created_at DESC LIMIT ?`, [limit]),
+  getSnapshot: (id) => get(`SELECT * FROM snapshots WHERE id=?`, [id]),
+  deleteSnapshot: (id) => run(`DELETE FROM snapshots WHERE id=?`, [id]),
+  insertSnapshotDashboard: (snapId, uid, title, folder, fingerprint, panelCount, schemaVer) =>
+    run(`INSERT INTO snapshot_dashboards (snapshot_id,dashboard_uid,title,folder,fingerprint,panel_count,schema_version) VALUES (?,?,?,?,?,?,?)`,
+      [snapId, uid, title, folder, fingerprint, panelCount, schemaVer]),
+  listSnapshotDashboards: (snapId) => all(`SELECT * FROM snapshot_dashboards WHERE snapshot_id=? ORDER BY title`, [snapId]),
+
+  // DSUD: Diffs
+  insertDiff: (id, baselineId, currentId, summary, total, crit, high, med, low, info) =>
+    run(`INSERT INTO snapshot_diffs (id,baseline_snapshot_id,current_snapshot_id,summary_json,total_changes,critical_count,high_count,medium_count,low_count,info_count) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [id, baselineId, currentId, summary, total, crit, high, med, low, info]),
+  getDiff: (id) => get(`SELECT * FROM snapshot_diffs WHERE id=?`, [id]),
+  listDiffs: (limit = 50) => all(`SELECT * FROM snapshot_diffs ORDER BY created_at DESC LIMIT ?`, [limit]),
+  deleteDiff: (id) => run(`DELETE FROM snapshot_diffs WHERE id=?`, [id]),
+  insertDiffItem: (id, diffId, dashUid, dashTitle, panelId, panelTitle, path, changeType, risk, before, after, aiExpl, aiRec) =>
+    run(`INSERT INTO snapshot_diff_items (id,diff_id,dashboard_uid,dashboard_title,panel_id,panel_title,path,change_type,risk_level,before_value,after_value,ai_explanation,ai_recommendation) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, diffId, dashUid, dashTitle, panelId, panelTitle, path, changeType, risk, before, after, aiExpl, aiRec]),
+  listDiffItems: (diffId, filters = {}) => {
+    let sql = `SELECT * FROM snapshot_diff_items WHERE diff_id=?`;
+    const params = [diffId];
+    if (filters.risk) { sql += ` AND risk_level=?`; params.push(filters.risk); }
+    if (filters.dashboardUid) { sql += ` AND dashboard_uid=?`; params.push(filters.dashboardUid); }
+    sql += ` ORDER BY CASE risk_level WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END`;
+    return all(sql, params);
+  },
+  acknowledgeDiffItem: (id) => run(`UPDATE snapshot_diff_items SET acknowledged=1 WHERE id=?`, [id]),
+  updateDiffItemAI: (id, expl, rec) => run(`UPDATE snapshot_diff_items SET ai_explanation=?, ai_recommendation=? WHERE id=?`, [expl, rec, id]),
 };
 
 module.exports = { getDb, saveDb, run, get, all, ops };

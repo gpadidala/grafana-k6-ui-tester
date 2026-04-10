@@ -7,6 +7,7 @@ import DashboardPage from './components/Dashboard/DashboardPage';
 import TestRunnerPage from './components/TestRunner/TestRunnerPage';
 import ReportsPage from './components/Reports/ReportsPage';
 import ComparePage from './components/Compare/ComparePage';
+import SnapshotsPage from './components/Snapshots/SnapshotsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 
 const layoutStyle = {
@@ -44,6 +45,7 @@ function AppShell() {
             <Route path="/run" element={<TestRunnerPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/compare" element={<ComparePage />} />
+            <Route path="/snapshots" element={<SnapshotsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>

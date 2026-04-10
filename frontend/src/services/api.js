@@ -19,6 +19,18 @@ export const api = {
   deleteReport: (id) => request('DELETE', `/api/reports/${id}`),
   deleteAllReports: () => request('DELETE', '/api/reports'),
   getHtmlReportUrl: (file) => `${API}/api/reports/html/${file}`,
+
+  // DSUD Snapshots
+  listSnapshots: () => request('GET', '/api/snapshots'),
+  getSnapshot: (id) => request('GET', `/api/snapshots/${id}`),
+  createSnapshot: (body) => request('POST', '/api/snapshots', body),
+  deleteSnapshot: (id) => request('DELETE', `/api/snapshots/${id}`),
+  createDiff: (baselineId, currentId) => request('POST', '/api/snapshots/diff', { baselineId, currentId }),
+  getDiff: (id) => request('GET', `/api/snapshots/diff/${id}`),
+  listDiffs: () => request('GET', '/api/snapshots/diff'),
+  acknowledgeDiffItem: (diffId, itemId) => request('POST', `/api/snapshots/diff/${diffId}/items/${itemId}/ack`),
+  getSnapshotDashboard: (snapshotId, uid) => request('GET', `/api/snapshots/${snapshotId}/dashboards/${uid}`),
+  getSnapshotStorageInfo: () => request('GET', '/api/snapshots/storage-info'),
 };
 
 export const API_BASE = API;

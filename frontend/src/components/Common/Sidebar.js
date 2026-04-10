@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { icon: '▶️', label: 'Run Tests', path: '/run' },
   { icon: '📋', label: 'Reports', path: '/reports' },
   { icon: '🔍', label: 'Compare', path: '/compare' },
+  { icon: '📸', label: 'Snapshots', path: '/snapshots' },
   { icon: '⚙️', label: 'Settings', path: '/settings' },
 ];
 
