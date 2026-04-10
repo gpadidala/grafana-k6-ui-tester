@@ -1,0 +1,134 @@
+[
+  {
+    "id": "tmpl-upgrade-readiness",
+    "name": "Upgrade Readiness Check",
+    "description": "Validates instance is healthy before a Grafana upgrade",
+    "originalPrompt": "Check if my Grafana is ready for an upgrade — verify all datasources are healthy, no plugins are broken, and admin stats look reasonable.",
+    "tags": ["upgrade", "health"],
+    "testCases": [
+      {
+        "id": "tc-1",
+        "description": "All datasources are healthy",
+        "severity": "high",
+        "tags": ["datasources"],
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/datasources", "store": "datasources" },
+          { "action": "iterate", "over": "datasources", "as": "ds", "limit": 20, "do": [
+            { "action": "measure_latency", "endpoint": "/api/datasources/uid/${ds.uid}/health", "assert": { "maxMs": 5000 } }
+          ]}
+        ]
+      },
+      {
+        "id": "tc-2",
+        "description": "All plugins are loaded",
+        "severity": "medium",
+        "tags": ["plugins"],
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/plugins", "store": "plugins" },
+          { "action": "count_gte", "field": "plugins", "value": 1, "description": "At least 1 plugin loaded" }
+        ]
+      },
+      {
+        "id": "tc-3",
+        "description": "Instance health endpoint responds",
+        "severity": "high",
+        "tags": ["health"],
+        "steps": [
+          { "action": "measure_latency", "endpoint": "/api/health", "assert": { "maxMs": 1000 } }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tmpl-dashboard-load-perf",
+    "name": "Dashboard Load Performance",
+    "description": "Verify all dashboards load within 2 seconds",
+    "originalPrompt": "Make sure every dashboard loads in under 2 seconds.",
+    "tags": ["performance", "dashboards"],
+    "testCases": [
+      {
+        "id": "tc-1",
+        "description": "All dashboards load within 2s",
+        "severity": "high",
+        "tags": ["performance"],
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/search?type=dash-db&limit=30", "store": "dashboards" },
+          { "action": "iterate", "over": "dashboards", "as": "dash", "limit": 30, "do": [
+            { "action": "measure_latency", "endpoint": "/api/dashboards/uid/${dash.uid}", "assert": { "maxMs": 2000 } }
+          ]}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tmpl-rbac-audit",
+    "name": "RBAC & Access Audit",
+    "description": "Audit users, teams, and service accounts",
+    "originalPrompt": "Audit who has access — list users, check admin count, verify service accounts.",
+    "tags": ["security", "rbac"],
+    "testCases": [
+      {
+        "id": "tc-1",
+        "description": "Org users present",
+        "severity": "medium",
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/org/users", "store": "users" },
+          { "action": "count_gte", "field": "users", "value": 1 }
+        ]
+      },
+      {
+        "id": "tc-2",
+        "description": "Service accounts inventory",
+        "severity": "low",
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/serviceaccounts/search", "store": "sa" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tmpl-alert-coverage",
+    "name": "Alert Rule Coverage",
+    "description": "Verify alert rules and contact points are configured",
+    "originalPrompt": "Check if alerting is properly set up — rules exist, contact points configured, policies defined.",
+    "tags": ["alerts"],
+    "testCases": [
+      {
+        "id": "tc-1",
+        "description": "Alert rules are defined",
+        "severity": "high",
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/v1/provisioning/alert-rules", "store": "rules" },
+          { "action": "count_gte", "field": "rules", "value": 1, "description": "At least 1 alert rule exists" }
+        ]
+      },
+      {
+        "id": "tc-2",
+        "description": "Contact points exist",
+        "severity": "high",
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/v1/provisioning/contact-points", "store": "cp" },
+          { "action": "count_gte", "field": "cp", "value": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tmpl-folder-organization",
+    "name": "Folder Organization",
+    "description": "Check folder structure and dashboard distribution",
+    "originalPrompt": "Check that my dashboards are organized into folders, not all in General.",
+    "tags": ["organization"],
+    "testCases": [
+      {
+        "id": "tc-1",
+        "description": "Folders exist",
+        "severity": "medium",
+        "steps": [
+          { "action": "grafana_api_get", "endpoint": "/api/folders", "store": "folders" },
+          { "action": "count_gte", "field": "folders", "value": 1, "description": "At least 1 folder configured" }
+        ]
+      }
+    ]
+  }
+]

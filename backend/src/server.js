@@ -10,11 +10,31 @@ const requestLogger = require('./middleware/requestLogger');
 const GrafanaClient = require('./services/grafanaClient');
 const PlaywrightRunner = require('./playwright/runner');
 const JMeterRunner = require('./jmeter/runner');
+const AIDynamicTestGenerator = require('./services/adtg');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 // Initialize DB
 require('./db').getDb();
+const { ops } = require('./db');
 
 const TestEngine = require('./services/testEngine');
+
+// Seed Smart Suite templates on startup (idempotent)
+async function seedSmartSuites() {
+  try {
+    const seedPath = path.join(__dirname, 'data/seed-suites.json');
+    if (!fs.existsSync(seedPath)) return;
+    const seeds = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+    for (const s of seeds) {
+      await ops.insertSmartSuite(s.id, s.name, s.description, s.originalPrompt, JSON.stringify(s), JSON.stringify(s.tags || []), true);
+    }
+    logger.info(`Seeded ${seeds.length} Smart Suite templates`);
+  } catch (err) {
+    logger.warn('Smart Suite seeding skipped', { error: err.message });
+  }
+}
+setTimeout(seedSmartSuites, 1000); // wait for DB to initialize
 
 const app = express();
 const server = http.createServer(app);
@@ -122,6 +142,156 @@ app.post('/api/playwright/run', async (req, res) => {
     res.status(500).json({ error: e.message });
   } finally {
     await pw.close();
+  }
+});
+
+// ─── ADTG (AI Dynamic Test Generator) ───
+function getAdtg(grafanaUrl, token) {
+  const url = (grafanaUrl && grafanaUrl.trim()) || config.grafana.url;
+  const tok = (token && token.trim()) || config.grafana.token;
+  return new AIDynamicTestGenerator(url, tok);
+}
+
+app.get('/api/adtg/status', (req, res) => {
+  const adtg = getAdtg();
+  res.json({
+    llmConfigured: adtg.isLLMConfigured(),
+    provider: process.env.LLM_PROVIDER || 'openai',
+    model: process.env.LLM_MODEL || 'gpt-4o-mini',
+  });
+});
+
+// Generate plan from prompt (parse + generate in one call)
+app.post('/api/adtg/generate', async (req, res) => {
+  try {
+    const { prompt, grafanaUrl, token } = req.body;
+    if (!prompt || typeof prompt !== 'string') {
+      return res.status(400).json({ error: 'prompt is required' });
+    }
+    const adtg = getAdtg(grafanaUrl, token);
+    if (!adtg.isLLMConfigured()) {
+      return res.status(400).json({ error: 'LLM not configured. Set LLM_API_KEY in backend/.env' });
+    }
+    const intent = await adtg.parseIntent(prompt, { version: 'unknown', orgId: 1 });
+    const plan = await adtg.generatePlan(intent);
+    const validation = adtg.validatePlan(plan);
+    res.json({ plan, validation });
+  } catch (err) {
+    logger.error('ADTG generate failed', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Refine plan via chat
+app.post('/api/adtg/refine', async (req, res) => {
+  try {
+    const { currentPlan, userMessage, grafanaUrl, token } = req.body;
+    if (!currentPlan || !userMessage) {
+      return res.status(400).json({ error: 'currentPlan and userMessage required' });
+    }
+    const adtg = getAdtg(grafanaUrl, token);
+    const intent = await adtg.parseIntent(currentPlan.originalPrompt || '', currentPlan.grafanaContext || {});
+    const plan = await adtg.generatePlan(intent, { currentPlan, userMessage });
+    const validation = adtg.validatePlan(plan);
+    res.json({ plan, validation });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Validate a (possibly user-edited) plan
+app.post('/api/adtg/validate', (req, res) => {
+  try {
+    const { plan, allowWrites, grafanaUrl, token } = req.body;
+    const adtg = getAdtg(grafanaUrl, token);
+    const validation = adtg.validatePlan(plan, { allowWrites });
+    res.json(validation);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Execute plan (synchronous + WebSocket)
+app.post('/api/adtg/execute', async (req, res) => {
+  try {
+    const { plan, allowWrites, grafanaUrl, token } = req.body;
+    const adtg = getAdtg(grafanaUrl, token);
+    const result = await adtg.executePlan(plan, (evt) => io.emit(evt.type, evt), { allowWrites });
+    // Save run to DB
+    try {
+      await ops.insertSmartSuiteRun(
+        result.summary.runId,
+        plan.suiteId || null,
+        result.summary.startedAt,
+        result.summary.completedAt,
+        result.summary.status,
+        JSON.stringify(result.summary),
+        JSON.stringify(result.results),
+        null
+      );
+    } catch (e) { logger.warn('Save run failed', { error: e.message }); }
+
+    // AI explanation (best-effort, non-blocking on failure)
+    let explanation = null;
+    try {
+      explanation = await adtg.explainResults(result);
+    } catch (e) { logger.warn('explainResults failed', { error: e.message }); }
+
+    res.json({ ...result, explanation });
+  } catch (err) {
+    logger.error('ADTG execute failed', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Smart Suites CRUD
+app.get('/api/adtg/suites', async (req, res) => {
+  try {
+    const suites = await ops.listSmartSuites();
+    const parsed = suites.map(s => ({
+      ...s,
+      tags: s.tags ? JSON.parse(s.tags) : [],
+      plan: s.plan_json ? JSON.parse(s.plan_json) : null,
+      isTemplate: !!s.is_template,
+    }));
+    res.json(parsed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/adtg/suites/:id', async (req, res) => {
+  try {
+    const s = await ops.getSmartSuite(req.params.id);
+    if (!s) return res.status(404).json({ error: 'Not found' });
+    res.json({
+      ...s,
+      tags: s.tags ? JSON.parse(s.tags) : [],
+      plan: s.plan_json ? JSON.parse(s.plan_json) : null,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/adtg/suites', async (req, res) => {
+  try {
+    const { name, description, plan, tags } = req.body;
+    if (!name || !plan) return res.status(400).json({ error: 'name and plan required' });
+    const id = plan.suiteId || uuidv4();
+    await ops.insertSmartSuite(id, name, description || '', plan.originalPrompt || '', JSON.stringify(plan), JSON.stringify(tags || []), false);
+    res.json({ id, name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/adtg/suites/:id', async (req, res) => {
+  try {
+    await ops.deleteSmartSuite(req.params.id);
+    res.json({ deleted: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

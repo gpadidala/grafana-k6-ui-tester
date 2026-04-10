@@ -117,6 +117,34 @@ CREATE TABLE IF NOT EXISTS environments (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS smart_suites (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  original_prompt TEXT,
+  plan_json TEXT NOT NULL,
+  tags TEXT,
+  is_template INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  last_run_at TEXT,
+  run_count INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS smart_suite_runs (
+  id TEXT PRIMARY KEY,
+  suite_id TEXT,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  status TEXT,
+  summary_json TEXT,
+  results_json TEXT,
+  ai_explanation TEXT,
+  FOREIGN KEY (suite_id) REFERENCES smart_suites(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_smart_suite_runs_suite ON smart_suite_runs(suite_id);
+CREATE INDEX IF NOT EXISTS idx_smart_suites_template ON smart_suites(is_template);
+
 CREATE INDEX IF NOT EXISTS idx_test_results_run ON test_results(run_id);
 CREATE INDEX IF NOT EXISTS idx_test_results_category ON test_results(run_id, category);
 CREATE INDEX IF NOT EXISTS idx_category_results_run ON category_results(run_id);

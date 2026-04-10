@@ -150,6 +150,22 @@ const ops = {
     run(`INSERT INTO screenshots (id,run_id,test_id,resource_type,resource_id,file_path,file_size) VALUES (?,?,?,?,?,?,?)`,
       [id, runId, testId, resType, resId, filePath, fileSize]),
   getScreenshots: (limit = 50) => all(`SELECT * FROM screenshots ORDER BY created_at DESC LIMIT ?`, [limit]),
+
+  // ── ADTG Smart Suites ──
+  insertSmartSuite: (id, name, description, prompt, planJson, tags, isTemplate) =>
+    run(`INSERT OR REPLACE INTO smart_suites (id,name,description,original_prompt,plan_json,tags,is_template) VALUES (?,?,?,?,?,?,?)`,
+      [id, name, description, prompt, planJson, tags, isTemplate ? 1 : 0]),
+  listSmartSuites: () => all(`SELECT * FROM smart_suites ORDER BY is_template DESC, last_run_at DESC, created_at DESC`),
+  listSmartSuiteTemplates: () => all(`SELECT * FROM smart_suites WHERE is_template=1 ORDER BY name`),
+  getSmartSuite: (id) => get(`SELECT * FROM smart_suites WHERE id=?`, [id]),
+  updateSuiteRunStats: (id) => run(`UPDATE smart_suites SET run_count = run_count + 1, last_run_at = datetime('now') WHERE id=?`, [id]),
+  deleteSmartSuite: (id) => run(`DELETE FROM smart_suites WHERE id=?`, [id]),
+
+  insertSmartSuiteRun: (id, suiteId, startedAt, completedAt, status, summaryJson, resultsJson, aiExplanation) =>
+    run(`INSERT INTO smart_suite_runs (id,suite_id,started_at,completed_at,status,summary_json,results_json,ai_explanation) VALUES (?,?,?,?,?,?,?,?)`,
+      [id, suiteId, startedAt, completedAt, status, summaryJson, resultsJson, aiExplanation]),
+  listSmartSuiteRuns: (suiteId, limit = 20) => all(`SELECT id,suite_id,started_at,completed_at,status,summary_json FROM smart_suite_runs WHERE suite_id=? ORDER BY started_at DESC LIMIT ?`, [suiteId, limit]),
+  getSmartSuiteRun: (id) => get(`SELECT * FROM smart_suite_runs WHERE id=?`, [id]),
 };
 
 module.exports = { getDb, saveDb, run, get, all, ops };
