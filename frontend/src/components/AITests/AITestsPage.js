@@ -2,6 +2,7 @@
 // Chat input → plan preview → approval → live execution → save as suite
 
 import React, { useState, useEffect } from 'react';
+import { useActiveEnv } from '../../context/AppContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
@@ -170,7 +171,27 @@ const styles = {
   },
 };
 
+// Read the LLM config the Settings page saved to localStorage and
+// translate it into the shape the backend expects. Returns null if the
+// user hasn't configured anything yet.
+function readLlmConfig() {
+  try {
+    const raw = localStorage.getItem('grafana_probe_llm');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.apiKey || parsed.provider === 'None') return null;
+    return {
+      provider: (parsed.provider || '').toLowerCase() === 'claude' ? 'claude' : 'openai',
+      apiKey: parsed.apiKey,
+      model: parsed.model || undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function AITestsPage() {
+  const { grafanaUrl, token, label: envLabel, isConfigured: envConfigured } = useActiveEnv();
   const [status, setStatus] = useState({ llmConfigured: false });
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -187,9 +208,22 @@ export default function AITestsPage() {
 
   useEffect(() => { injectKF(); }, []);
 
+  // Re-check LLM status whenever the page mounts OR focus returns (so the
+  // banner flips from yellow to green after the user saves a key in Settings
+  // and comes back to this tab).
   useEffect(() => {
-    fetch(`${API_BASE}/api/adtg/status`).then(r => r.json()).then(setStatus).catch(() => {});
+    function refreshStatus() {
+      const llmConfig = readLlmConfig();
+      fetch(`${API_BASE}/api/adtg/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ llmConfig }),
+      }).then(r => r.json()).then(setStatus).catch(() => {});
+    }
+    refreshStatus();
     loadSuites();
+    window.addEventListener('focus', refreshStatus);
+    return () => window.removeEventListener('focus', refreshStatus);
   }, []);
 
   function loadSuites() {
@@ -206,7 +240,7 @@ export default function AITestsPage() {
     try {
       const res = await fetch(`${API_BASE}/api/adtg/generate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, grafanaUrl, token, llmConfig: readLlmConfig() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Generation failed');
@@ -221,6 +255,10 @@ export default function AITestsPage() {
 
   async function handleExecute() {
     if (!plan) return;
+    if (!envConfigured) {
+      setError('No environment selected — pick one in the sidebar (Settings → configure URL + token).');
+      return;
+    }
     setExecuting(true);
     setError(null);
     try {
@@ -237,7 +275,7 @@ export default function AITestsPage() {
       }
       const res = await fetch(`${API_BASE}/api/adtg/execute`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: executePlan }),
+        body: JSON.stringify({ plan: executePlan, grafanaUrl, token, llmConfig: readLlmConfig() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Execution failed');
@@ -249,6 +287,10 @@ export default function AITestsPage() {
   }
 
   async function handleRunSuite(suite) {
+    if (!envConfigured) {
+      setError('No environment selected — pick one in the sidebar (Settings → configure URL + token).');
+      return;
+    }
     setPlan(suite.plan);
     setPlanJson(JSON.stringify(suite.plan, null, 2));
     setValidation({ valid: true, estimatedCalls: 0 });
@@ -258,7 +300,7 @@ export default function AITestsPage() {
     try {
       const res = await fetch(`${API_BASE}/api/adtg/execute`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: suite.plan }),
+        body: JSON.stringify({ plan: suite.plan, grafanaUrl, token, llmConfig: readLlmConfig() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Execution failed');
@@ -290,7 +332,7 @@ export default function AITestsPage() {
   }
 
   return (
-    <div style={styles.page}>
+    <div style={styles.page} data-tour="ai-tests-page">
       <h1 style={styles.title}>
         <span style={{ fontSize: 32 }}>🧠</span>
         AI Tests

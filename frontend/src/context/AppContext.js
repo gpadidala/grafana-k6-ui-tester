@@ -4,7 +4,24 @@ const AppContext = createContext(null);
 
 const STORAGE_KEY_CONFIG = 'grafanaprobe_config';
 const STORAGE_KEY_USERNAME = 'grafanaprobe_username';
+const STORAGE_KEY_ENVS = 'grafana_probe_envs';
+const STORAGE_KEY_ACTIVE_ENV = 'grafana_probe_active_env';
+const STORAGE_KEY_ONBOARDED = 'grafanaprobe_onboarded';
 const TOAST_TIMEOUT = 4500;
+
+// Bump this when you add new tour steps or want the welcome tour to
+// auto-show once to returning users. The storage key stores the version
+// the user last saw; if it doesn't match APP_TOUR_VERSION, the tour
+// auto-opens on next load.
+// 2.0 → 2.1: replaced OnboardingModal with interactive UserTour dock
+// 2.1 → 2.2: added spotlight + auto-navigation per step
+export const APP_TOUR_VERSION = '2.2';
+
+export const DEFAULT_ENVS = [
+  { key: 'DEV', label: 'DEV', color: '#22d3ee', url: '', token: '' },
+  { key: 'PERF', label: 'PERF', color: '#eab308', url: '', token: '' },
+  { key: 'PROD', label: 'PROD', color: '#ef4444', url: '', token: '' },
+];
 
 let toastIdCounter = 0;
 
@@ -49,6 +66,55 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // --- Environments (shared with Settings page) ---
+  const [envs, setEnvsState] = useState(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_ENVS);
+      return stored ? JSON.parse(stored) : DEFAULT_ENVS;
+    } catch {
+      return DEFAULT_ENVS;
+    }
+  });
+
+  const setEnvs = useCallback((updater) => {
+    setEnvsState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      try { localStorage.setItem(STORAGE_KEY_ENVS, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  // --- Active environment key ---
+  const [activeEnvKey, setActiveEnvKeyState] = useState(() => {
+    try { return localStorage.getItem(STORAGE_KEY_ACTIVE_ENV) || ''; } catch { return ''; }
+  });
+
+  const setActiveEnvKey = useCallback((key) => {
+    setActiveEnvKeyState(key || '');
+    try {
+      if (key) localStorage.setItem(STORAGE_KEY_ACTIVE_ENV, key);
+      else localStorage.removeItem(STORAGE_KEY_ACTIVE_ENV);
+    } catch {}
+  }, []);
+
+  const activeEnv = envs.find((e) => e.key === activeEnvKey) || null;
+
+  // --- Onboarding / Welcome Tour ---
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try {
+      const seenVersion = localStorage.getItem(STORAGE_KEY_ONBOARDED);
+      return seenVersion !== APP_TOUR_VERSION;
+    } catch {
+      return true;
+    }
+  });
+
+  const openOnboarding = useCallback(() => setShowOnboarding(true), []);
+  const closeOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    try { localStorage.setItem(STORAGE_KEY_ONBOARDED, APP_TOUR_VERSION); } catch {}
+  }, []);
+
   // --- Toasts ---
   const [toasts, setToasts] = useState([]);
   const timersRef = useRef({});
@@ -89,6 +155,14 @@ export function AppProvider({ children }) {
     removeToast,
     userName,
     setUserName,
+    envs,
+    setEnvs,
+    activeEnvKey,
+    setActiveEnvKey,
+    activeEnv,
+    showOnboarding,
+    openOnboarding,
+    closeOnboarding,
   };
 
   return (
@@ -104,6 +178,22 @@ export function useApp() {
     throw new Error('useApp must be used within an AppProvider');
   }
   return ctx;
+}
+
+/**
+ * Returns the currently-selected environment's credentials, or nulls.
+ * Use this in any page that makes Grafana-bound API calls.
+ */
+export function useActiveEnv() {
+  const { activeEnv } = useApp();
+  return {
+    env: activeEnv,
+    grafanaUrl: activeEnv?.url || '',
+    token: activeEnv?.token || '',
+    label: activeEnv?.label || '',
+    color: activeEnv?.color || '',
+    isConfigured: Boolean(activeEnv && activeEnv.url),
+  };
 }
 
 export default AppContext;

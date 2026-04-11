@@ -11,6 +11,18 @@ export const api = {
   health: () => request('GET', '/api/health'),
   config: () => request('GET', '/api/config'),
   testConnection: (grafanaUrl, token) => request('POST', '/api/test-connection', { grafanaUrl, token }),
+  listDatasources: (grafanaUrl, token) => {
+    const qs = new URLSearchParams();
+    if (grafanaUrl) qs.set('grafanaUrl', grafanaUrl);
+    if (token) qs.set('token', token);
+    return request('GET', `/api/datasources?${qs.toString()}`);
+  },
+  getDatasourceImpact: (uid, grafanaUrl, token) => {
+    const qs = new URLSearchParams();
+    if (grafanaUrl) qs.set('grafanaUrl', grafanaUrl);
+    if (token) qs.set('token', token);
+    return request('GET', `/api/datasources/${encodeURIComponent(uid)}/impact?${qs.toString()}`);
+  },
   getCategories: () => request('GET', '/api/tests/categories'),
   runTests: (body) => request('POST', '/api/tests/run', body),
   runCategory: (id, body) => request('POST', `/api/tests/run-category/${id}`, body),
@@ -31,6 +43,12 @@ export const api = {
   acknowledgeDiffItem: (diffId, itemId) => request('POST', `/api/snapshots/diff/${diffId}/items/${itemId}/ack`),
   getSnapshotDashboard: (snapshotId, uid) => request('GET', `/api/snapshots/${snapshotId}/dashboards/${uid}`),
   getSnapshotStorageInfo: () => request('GET', '/api/snapshots/storage-info'),
+
+  // Email
+  getEmailConfig: () => request('GET', '/api/email/config'),
+  saveEmailConfig: (cfg) => request('POST', '/api/email/config', cfg),
+  sendTestEmail: (to) => request('POST', '/api/email/test', { to }),
+  notifyFailure: (body) => request('POST', '/api/email/notify-failure', body),
 };
 
 export const API_BASE = API;

@@ -2,6 +2,32 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import StatusBadge from '../Common/StatusBadge';
 
+/* Build a live Grafana URL for a test result based on its category + uid. */
+function linkForResource(grafanaUrl, categoryId, uid, metadata) {
+  if (!grafanaUrl || !uid) return null;
+  const base = String(grafanaUrl).replace(/\/+$/, '');
+  switch (categoryId) {
+    case 'panels': {
+      const pid = metadata && metadata.panelId;
+      return pid ? `${base}/d/${uid}?viewPanel=${pid}` : `${base}/d/${uid}`;
+    }
+    case 'datasources':
+      return `${base}/connections/datasources/edit/${uid}`;
+    case 'folders':
+      return `${base}/dashboards/f/${uid}`;
+    case 'plugins':
+    case 'app-plugins':
+      return `${base}/plugins/${uid}`;
+    case 'alerts':
+    case 'alert-e2e':
+      return `${base}/alerting/grafana/${uid}/view`;
+    case 'dashboards':
+    case 'annotations':
+    default:
+      return `${base}/d/${uid}`;
+  }
+}
+
 /* ── theme tokens ── */
 const C = {
   bg: '#030712',
@@ -124,6 +150,46 @@ export default function ReportsPage() {
   const [hoveredId, setHoveredId] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  // Email button state — track which row is sending and result toast
+  const [emailingId, setEmailingId] = useState(null);
+  const [emailToast, setEmailToast] = useState(null);
+
+  // Send a failure notification email for a given test result
+  const sendFailureEmail = async (test, report, category) => {
+    const rowId = `${report.id}:${category.id}:${test.name}`;
+    setEmailingId(rowId);
+    setEmailToast(null);
+    try {
+      const grafanaUrl = report.grafana_url || '';
+      const dashboardTitle = (test.metadata && test.metadata.dashboardTitle)
+        || ((test.name || '').match(/^\[(.+?)\]/) || [])[1]
+        || 'Dashboard';
+      const dashboardUrl = test.uid && grafanaUrl
+        ? `${String(grafanaUrl).replace(/\/+$/, '')}/d/${test.uid}`
+        : '';
+      const screenshotUrl = test.metadata && test.metadata.screenshot
+        ? `http://localhost:4000/api/test-screenshots/${test.metadata.screenshot}`
+        : '';
+      const r = await api.notifyFailure({
+        test,
+        dashboardTitle,
+        dashboardUrl,
+        screenshotUrl,
+        runId: report.id,
+        runDate: report.start_time || report.startedAt,
+        grafanaUrl,
+      });
+      if (r && r.ok) {
+        setEmailToast({ ok: true, msg: `Sent to ${(r.sentTo || []).join(', ')}${r.cc?.length ? ' (cc: ' + r.cc.join(', ') + ')' : ''}` });
+      } else {
+        setEmailToast({ ok: false, msg: (r && r.error) || 'Failed to send' });
+      }
+    } catch (e) {
+      setEmailToast({ ok: false, msg: e.message || 'Failed to send' });
+    }
+    setEmailingId(null);
+    setTimeout(() => setEmailToast(null), 5000);
+  };
 
   useEffect(() => { injectKf(); }, []);
 
@@ -241,7 +307,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div style={s.page}>
+    <div style={s.page} data-tour="reports-page">
       {/* header */}
       <div style={s.header}>
         <div style={s.headerLeft}>
@@ -254,6 +320,19 @@ export default function ReportsPage() {
           </button>
         )}
       </div>
+
+      {/* email send result toast */}
+      {emailToast && (
+        <div style={{
+          padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+          background: emailToast.ok ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1px solid ${emailToast.ok ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`,
+          color: emailToast.ok ? '#10b981' : '#fca5a5',
+          fontSize: 13,
+        }}>
+          {emailToast.ok ? '✉️ Email sent — ' : '✗ '} {emailToast.msg}
+        </div>
+      )}
 
       {/* filters */}
       <div style={s.filtersRow}>
@@ -309,6 +388,45 @@ export default function ReportsPage() {
               </button>
             </div>
 
+            {/* Category tags: shows exactly which test suites were run.
+                Condenses to a single "all" pill when the full suite ran. */}
+            {Array.isArray(r.categories_run) && r.categories_run.length > 0 && (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8,
+                paddingLeft: 2,
+              }}>
+                {(() => {
+                  const ran = r.categories_run;
+                  const total = r.total_categories || 22;
+                  // If the full suite was run, just show a single "all" pill
+                  if (ran.length >= total) {
+                    return (
+                      <span style={{
+                        padding: '2px 10px', borderRadius: 9999,
+                        background: 'rgba(99,102,241,0.15)',
+                        border: '1px solid rgba(99,102,241,0.4)',
+                        color: '#a5b4fc', fontSize: 10, fontWeight: 700,
+                        textTransform: 'uppercase', letterSpacing: 0.5,
+                      }}>
+                        all · {ran.length} categories
+                      </span>
+                    );
+                  }
+                  // Otherwise list every category as an individual pill
+                  return ran.map((catId) => (
+                    <span key={catId} style={{
+                      padding: '2px 9px', borderRadius: 9999,
+                      background: C.input, border: `1px solid ${C.border}`,
+                      color: C.muted, fontSize: 10, fontWeight: 600,
+                      textTransform: 'uppercase', letterSpacing: 0.3,
+                    }}>
+                      {catId}
+                    </span>
+                  ));
+                })()}
+              </div>
+            )}
+
             {/* expanded detail */}
             {isExpanded && expandedReport && (
               <div style={s.expandArea}>
@@ -337,25 +455,50 @@ export default function ReportsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {cat.tests.map((t, i) => (
+                          {cat.tests.map((t, i) => {
+                            const isIssue = t.status === 'WARN' || t.status === 'FAIL';
+                            const link = linkForResource(r.grafana_url, cat.id, t.uid, t.metadata);
+                            const canEmail = isIssue && t.metadata && t.metadata.dashboardMeta;
+                            const rowId = `${r.id}:${cat.id}:${t.name}`;
+                            const isEmailing = emailingId === rowId;
+                            return (
                             <tr key={i}>
                               <td style={s.td}><StatusBadge status={t.status} size="sm" /></td>
                               <td style={s.td}>
-                                {t.uid && r.grafana_url ? (
-                                  <a href={`${r.grafana_url}/d/${t.uid}`} target="_blank"
+                                {link ? (
+                                  <a href={link} target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: C.accent, textDecoration: 'none' }}
-                                    onClick={(e) => e.stopPropagation()}>
+                                    style={{ color: isIssue ? '#818cf8' : C.accent, textDecoration: 'none', fontWeight: isIssue ? 500 : 400 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={`Open in Grafana: ${link}`}>
                                     {t.name}
+                                    {isIssue && <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.8 }}>↗</span>}
                                   </a>
                                 ) : t.name}
+                                {canEmail && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); sendFailureEmail(t, r, cat); }}
+                                    disabled={isEmailing}
+                                    style={{
+                                      marginLeft: 8, padding: '2px 8px', borderRadius: 5,
+                                      border: '1px solid #6366f1',
+                                      background: 'rgba(99,102,241,0.1)',
+                                      color: '#a5b4fc', fontSize: 11, cursor: isEmailing ? 'wait' : 'pointer',
+                                      fontFamily: 'inherit',
+                                    }}
+                                    title="Email this failure to the dashboard's createdBy/updatedBy + default CC"
+                                  >
+                                    {isEmailing ? '⏳' : '📧'}
+                                  </button>
+                                )}
                               </td>
                               <td style={{ ...s.td, color: C.muted }}>{t.ms ?? '--'}</td>
                               <td style={{ ...s.td, color: C.muted, maxWidth: 300, wordBreak: 'break-word' }}>
                                 {t.detail || '--'}
                               </td>
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     )}

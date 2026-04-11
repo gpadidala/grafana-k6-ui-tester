@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../../services/api';
 import { getSocket } from '../../services/socket';
 import StatusBadge from '../Common/StatusBadge';
+import { useActiveEnv } from '../../context/AppContext';
 
 /* ───────────────────────── keyframes (injected once) ───────────────────────── */
 const KEYFRAMES = `
@@ -17,12 +19,15 @@ function injectKF() {
   kfInjected = true;
 }
 
-/* ───────────────────────── constants ───────────────────────── */
-const LS_URL_KEY = 'grafanaprobe_grafanaUrl';
-const LS_TOKEN_KEY = 'grafanaprobe_token';
-
 /* ───────────────────────── component ───────────────────────── */
 export default function TestRunnerPage() {
+  /* ── active env (sourced from Settings via AppContext) ── */
+  const { grafanaUrl, token, label: envLabel, color: envColor, isConfigured: envConfigured, env: activeEnv } = useActiveEnv();
+
+  /* ── preselect category from navigation state (e.g. Dashboard "Run" button) ── */
+  const location = useLocation();
+  const preselectCategory = location.state?.preselectCategory || null;
+
   /* ── state ── */
   const [engine, setEngine] = useState('k6'); // 'k6' | 'playwright' | 'jmeter'
   const [categories, setCategories] = useState([]);
@@ -57,8 +62,6 @@ export default function TestRunnerPage() {
   const [pwLogs, setPwLogs] = useState([]);
   const [pwResults, setPwResults] = useState(null);
   const pwLogRef = useRef(null);
-  const [grafanaUrl, setGrafanaUrl] = useState('');
-  const [token, setToken] = useState('');
   const [phase, setPhase] = useState('config'); // config | running | done
   const [catStatuses, setCatStatuses] = useState({}); // { catId: { status, total, passed, failed, tests:[] } }
   const [logs, setLogs] = useState([]);
@@ -68,7 +71,45 @@ export default function TestRunnerPage() {
   const [hoveredResult, setHoveredResult] = useState(null);
   const logRef = useRef(null);
 
+  /* ── Datasource scope (optional) — filters dashboards/panels/alerts
+     to only those using the selected datasource. Applies to all three
+     engines (K6 / Playwright / JMeter). ── */
+  const [datasources, setDatasources] = useState([]);
+  const [datasourceUid, setDatasourceUid] = useState('');
+  const [dsImpact, setDsImpact] = useState(null);
+  const [dsLoading, setDsLoading] = useState(false);
+
   useEffect(() => { injectKF(); }, []);
+
+  // Load datasources when env changes
+  useEffect(() => {
+    if (!envConfigured) { setDatasources([]); return; }
+    setDsLoading(true);
+    api.listDatasources(grafanaUrl, token)
+      .then((list) => { setDatasources(Array.isArray(list) ? list : []); })
+      .catch(() => setDatasources([]))
+      .finally(() => setDsLoading(false));
+    // Clear any previous selection/impact when env changes
+    setDatasourceUid('');
+    setDsImpact(null);
+  }, [grafanaUrl, token, envConfigured]);
+
+  // When the user picks a DS, show the blast-radius preview
+  useEffect(() => {
+    if (!datasourceUid || !envConfigured) { setDsImpact(null); return; }
+    let cancelled = false;
+    api.getDatasourceImpact(datasourceUid, grafanaUrl, token)
+      .then((r) => { if (!cancelled) setDsImpact(r); })
+      .catch(() => { if (!cancelled) setDsImpact(null); });
+    return () => { cancelled = true; };
+  }, [datasourceUid, grafanaUrl, token, envConfigured]);
+
+  // Helper to build the datasourceFilter payload to send to the backend
+  const datasourceFilter = (() => {
+    if (!datasourceUid) return null;
+    const ds = datasources.find((d) => d.uid === datasourceUid);
+    return ds ? { uid: ds.uid, name: ds.name } : null;
+  })();
 
   /* load categories */
   useEffect(() => {
@@ -77,31 +118,20 @@ export default function TestRunnerPage() {
         const cats = await api.getCategories();
         if (Array.isArray(cats)) {
           setCategories(cats);
-          setSelected(new Set(cats.map((c) => c.id)));
+          // If navigated here with a preselect hint (e.g. from Dashboard
+          // page "Run" button), select only that category. Otherwise
+          // default to selecting everything.
+          if (preselectCategory && cats.some((c) => c.id === preselectCategory)) {
+            setSelected(new Set([preselectCategory]));
+          } else {
+            setSelected(new Set(cats.map((c) => c.id)));
+          }
         }
       } catch (e) {
         console.error('Failed to load categories:', e);
       }
     })();
-  }, []);
-
-  /* restore from localStorage */
-  useEffect(() => {
-    try {
-      const u = localStorage.getItem(LS_URL_KEY);
-      const t = localStorage.getItem(LS_TOKEN_KEY);
-      if (u) setGrafanaUrl(u);
-      if (t) setToken(t);
-    } catch { /* ignore */ }
-  }, []);
-
-  /* persist inputs */
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_URL_KEY, grafanaUrl);
-      localStorage.setItem(LS_TOKEN_KEY, token);
-    } catch { /* ignore */ }
-  }, [grafanaUrl, token]);
+  }, [preselectCategory]);
 
   /* auto-scroll log */
   useEffect(() => {
@@ -129,6 +159,10 @@ export default function TestRunnerPage() {
   /* ── run tests ── */
   const handleRun = useCallback(() => {
     if (selected.size === 0) return;
+    if (!envConfigured) {
+      alert('No environment selected. Pick a target env in the sidebar (or configure one in Settings).');
+      return;
+    }
     setPhase('running');
     setResults(null);
     setLogs([]);
@@ -208,24 +242,15 @@ export default function TestRunnerPage() {
     socket.on('test-progress', onProgress);
     socket.on('test-complete', onComplete);
 
-    /* emit run command */
+    /* emit run command — WS gives live progress; no REST duplicate */
     socket.emit('run-tests', {
       grafanaUrl,
       token,
+      envKey: activeEnv?.key || null,
       categories: Array.from(selected),
+      datasourceFilter,
     });
-
-    /* also fire REST call as fallback */
-    api.runTests({ grafanaUrl, token, categories: Array.from(selected) })
-      .then((res) => {
-        if (phase !== 'done' && res) {
-          /* socket might not be available; use REST result */
-        }
-      })
-      .catch((err) => {
-        addLog(`Error: ${err.message}`);
-      });
-  }, [selected, grafanaUrl, token, addLog, phase]);
+  }, [selected, grafanaUrl, token, activeEnv, envConfigured, addLog, phase, datasourceFilter]);
 
   /* ── toggle expanded result ── */
   const toggleExpanded = (catId) => {
@@ -625,7 +650,7 @@ export default function TestRunnerPage() {
   ];
 
   return (
-    <div style={st.page}>
+    <div style={st.page} data-tour="run-tests-page">
       <h1 style={st.pageTitle}>Test Runner</h1>
       <p style={st.pageSubtitle}>Select test engine, categories, and run tests.</p>
 
@@ -690,9 +715,10 @@ export default function TestRunnerPage() {
 
           {/* Run Button */}
           <button
-            style={{ ...st.runBtn, cursor: pwSelected.size === 0 || pwPhase === 'running' ? 'not-allowed' : 'pointer', opacity: pwSelected.size === 0 || pwPhase === 'running' ? 0.6 : 1 }}
-            disabled={pwSelected.size === 0 || pwPhase === 'running'}
+            style={{ ...st.runBtn, cursor: (pwSelected.size === 0 || pwPhase === 'running' || !envConfigured) ? 'not-allowed' : 'pointer', opacity: (pwSelected.size === 0 || pwPhase === 'running' || !envConfigured) ? 0.6 : 1 }}
+            disabled={pwSelected.size === 0 || pwPhase === 'running' || !envConfigured}
             onClick={() => {
+              if (!envConfigured) { alert('No environment selected.'); return; }
               setPwPhase('running');
               setPwResults(null);
               setPwLogs([]);
@@ -702,14 +728,21 @@ export default function TestRunnerPage() {
               socket.on('pw-progress', (evt) => {
                 if (evt.type === 'pw_suite_start') setPwLogs(p => [...p, { text: `🎭 ▶ ${evt.suiteName} starting...`, color: '#6366f1' }]);
                 if (evt.type === 'pw_test_result' && evt.test) {
-                  const icon = evt.test.status === 'PASS' ? '✓' : evt.test.status === 'FAIL' ? '✗' : '⚠';
-                  const color = evt.test.status === 'PASS' ? '#10b981' : evt.test.status === 'FAIL' ? '#ef4444' : '#eab308';
-                  setPwLogs(p => [...p, { text: `  ${icon} ${evt.test.name} (${evt.test.ms || 0}ms)`, color }]);
+                  const t = evt.test;
+                  const icon = t.status === 'PASS' ? '✓' : t.status === 'FAIL' ? '✗' : '⚠';
+                  const color = t.status === 'PASS' ? '#10b981' : t.status === 'FAIL' ? '#ef4444' : '#eab308';
+                  const isIssue = t.status === 'FAIL' || t.status === 'WARN';
+                  setPwLogs(p => {
+                    const lines = [{ text: `  ${icon} ${t.name} (${t.ms || 0}ms)`, color }];
+                    if (isIssue && t.detail) lines.push({ text: `     ↳ ${t.detail}`, color: '#94a3b8' });
+                    if (isIssue && t.url) lines.push({ text: `     ↳ ${t.url}`, color: '#64748b' });
+                    return [...p, ...lines];
+                  });
                 }
                 if (evt.type === 'pw_suite_done') setPwLogs(p => [...p, { text: `🎭 ■ ${evt.result?.name} — ${evt.result?.summary?.passed}/${evt.result?.summary?.total} passed`, color: evt.result?.status === 'PASS' ? '#10b981' : '#ef4444' }]);
               });
               socket.on('pw-complete', (data) => { setPwPhase('done'); setPwResults(data); });
-              socket.emit('run-playwright', { grafanaUrl, token, suites: Array.from(pwSelected) });
+              socket.emit('run-playwright', { grafanaUrl, token, suites: Array.from(pwSelected), datasourceFilter });
             }}
           >
             {pwPhase === 'running' && <span style={st.spinner} />}
@@ -753,13 +786,115 @@ export default function TestRunnerPage() {
                           <StatusBadge status={s.status} size="sm" />
                         </div>
                         <div style={{ marginTop: 8 }}>
-                          {(s.tests || []).map((t, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12 }}>
-                              <StatusBadge status={t.status} size="sm" />
-                              <span style={{ color: '#e2e8f0' }}>{t.name}</span>
-                              {t.ms && <span style={{ color: '#94a3b8', marginLeft: 'auto' }}>{t.ms}ms</span>}
-                            </div>
-                          ))}
+                          {(s.tests || []).map((t, i) => {
+                            const isIssue = t.status === 'FAIL' || t.status === 'WARN';
+                            const liveUrl = t.url || grafanaUrl || null;
+                            const isInfoRow = t.metadata && t.metadata.infoRow;
+                            const shotPath = t.metadata && t.metadata.screenshot;
+                            // Special render for "Dashboard info" header rows
+                            if (isInfoRow) {
+                              const md = t.metadata || {};
+                              const fmtD = (iso) => {
+                                if (!iso || String(iso).startsWith('0001')) return 'unknown';
+                                try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+                                catch { return iso; }
+                              };
+                              const titleMatch = (t.name || '').match(/^\[(.+)\]\s+Dashboard info$/);
+                              const dashTitle = titleMatch ? titleMatch[1] : t.name;
+                              return (
+                                <div key={i} style={{
+                                  padding: '12px 14px', marginTop: 8, marginBottom: 4, borderRadius: 8,
+                                  background: 'rgba(99, 102, 241, 0.08)',
+                                  border: '1px solid rgba(99, 102, 241, 0.25)',
+                                }}>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#a5b4fc', marginBottom: 6 }}>
+                                    📊 {dashTitle}
+                                    {md.folderTitle && <span style={{ marginLeft: 8, fontSize: 10, color: '#64748b', fontWeight: 400 }}>in {md.folderTitle}</span>}
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 11, color: '#94a3b8' }}>
+                                    <span>👤 <strong style={{ color: '#cbd5e1' }}>{md.createdBy || 'unknown'}</strong> · {fmtD(md.created)}</span>
+                                    <span>✏️ <strong style={{ color: '#cbd5e1' }}>{md.updatedBy || 'unknown'}</strong> · {fmtD(md.updated)}</span>
+                                    <span>🔢 v{md.version || 0}</span>
+                                    <span title="View count requires Grafana Enterprise or usage stats">👁 {md.viewCount != null ? md.viewCount : '—'}</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={i} style={{
+                                padding: '6px 8px', fontSize: 12, borderRadius: 6, marginBottom: 2,
+                                background: isIssue ? (t.status === 'FAIL' ? 'rgba(239,68,68,0.06)' : 'rgba(234,179,8,0.06)') : 'transparent',
+                                borderLeft: isIssue ? `2px solid ${t.status === 'FAIL' ? '#ef4444' : '#eab308'}` : '2px solid transparent',
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <StatusBadge status={t.status} size="sm" />
+                                  <span style={{ color: '#e2e8f0', flex: 1 }}>{t.name}</span>
+                                  {t.spec && (
+                                    <span style={{ fontSize: 10, color: '#64748b', fontFamily: 'ui-monospace, Menlo, monospace' }}>
+                                      {t.spec}
+                                    </span>
+                                  )}
+                                  {liveUrl && isIssue && (
+                                    <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+                                      style={{ fontSize: 11, color: '#818cf8', textDecoration: 'none', fontWeight: 500 }}
+                                      title={`Open in Grafana: ${liveUrl}`}>
+                                      Open ↗
+                                    </a>
+                                  )}
+                                  {t.ms != null && <span style={{ color: '#94a3b8', fontSize: 11 }}>{t.ms}ms</span>}
+                                </div>
+                                {isIssue && t.detail && (
+                                  <div style={{
+                                    marginTop: 4, marginLeft: 28, fontSize: 11,
+                                    color: t.status === 'FAIL' ? '#fca5a5' : '#fde68a',
+                                    lineHeight: 1.5, wordBreak: 'break-word',
+                                  }}>
+                                    {t.detail}
+                                  </div>
+                                )}
+                                {isIssue && t.error && t.error !== t.detail && (
+                                  <pre style={{
+                                    marginTop: 4, marginLeft: 28, marginBottom: 0,
+                                    padding: '6px 10px', borderRadius: 6,
+                                    background: '#030712', border: '1px solid #1e293b',
+                                    fontSize: 10, lineHeight: 1.4,
+                                    color: '#94a3b8', fontFamily: 'ui-monospace, Menlo, monospace',
+                                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                    maxHeight: 140, overflow: 'auto',
+                                  }}>
+                                    {t.error}
+                                  </pre>
+                                )}
+                                {isIssue && liveUrl && (
+                                  <div style={{
+                                    marginTop: 3, marginLeft: 28, fontSize: 10,
+                                    color: '#64748b', fontFamily: 'ui-monospace, Menlo, monospace',
+                                    wordBreak: 'break-all',
+                                  }}>
+                                    at {liveUrl}
+                                  </div>
+                                )}
+                                {shotPath && (
+                                  <div style={{ marginTop: 6, marginLeft: 28 }}>
+                                    <a href={`http://localhost:4000/api/test-screenshots/${shotPath}`}
+                                      target="_blank" rel="noopener noreferrer"
+                                      title="Click for full-size screenshot">
+                                      <img
+                                        src={`http://localhost:4000/api/test-screenshots/${shotPath}`}
+                                        alt="Panel screenshot"
+                                        style={{
+                                          maxWidth: 240, maxHeight: 140,
+                                          border: '1px solid #334155', borderRadius: 6,
+                                          display: 'block',
+                                        }}
+                                        loading="lazy"
+                                      />
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -807,9 +942,10 @@ export default function TestRunnerPage() {
             </div>
           </div>
 
-          <button style={{ ...st.runBtn, background: 'linear-gradient(135deg, #f97316, #ef4444)', boxShadow: '0 0 20px rgba(249,115,22,0.35)', cursor: jmSelected.size === 0 || jmPhase === 'running' ? 'not-allowed' : 'pointer', opacity: jmSelected.size === 0 || jmPhase === 'running' ? 0.6 : 1 }}
-            disabled={jmSelected.size === 0 || jmPhase === 'running'}
+          <button style={{ ...st.runBtn, background: 'linear-gradient(135deg, #f97316, #ef4444)', boxShadow: '0 0 20px rgba(249,115,22,0.35)', cursor: (jmSelected.size === 0 || jmPhase === 'running' || !envConfigured) ? 'not-allowed' : 'pointer', opacity: (jmSelected.size === 0 || jmPhase === 'running' || !envConfigured) ? 0.6 : 1 }}
+            disabled={jmSelected.size === 0 || jmPhase === 'running' || !envConfigured}
             onClick={() => {
+              if (!envConfigured) { alert('No environment selected.'); return; }
               setJmPhase('running'); setJmResults(null); setJmLogs([]);
               const socket = getSocket();
               socket.off('jm-progress'); socket.off('jm-complete');
@@ -819,7 +955,7 @@ export default function TestRunnerPage() {
                 if (evt.type === 'jm_plan_done') setJmLogs(p => [...p, { text: `🔥 ■ ${evt.planId} — ${evt.result?.summary?.total || 0} samples, ${evt.result?.summary?.avgMs || 0}ms avg, ${evt.result?.summary?.errorRate}`, color: evt.result?.status === 'PASS' ? '#10b981' : '#ef4444' }]);
               });
               socket.on('jm-complete', data => { setJmPhase('done'); setJmResults(data); });
-              socket.emit('run-jmeter', { grafanaUrl, token, plans: Array.from(jmSelected), threads: jmThreads, duration: jmDuration });
+              socket.emit('run-jmeter', { grafanaUrl, token, plans: Array.from(jmSelected), threads: jmThreads, duration: jmDuration, datasourceFilter });
             }}>
             {jmPhase === 'running' && <span style={st.spinner} />}
             {jmPhase === 'running' ? 'Running Performance Tests...' : `🔥 Run ${jmSelected.size || 'All'} Performance Plans`}
@@ -910,40 +1046,108 @@ export default function TestRunnerPage() {
         </span>
       </div>
 
-      {/* ── Grafana Config ── */}
-      <div style={st.sectionLabel}>Grafana Connection</div>
-      <div style={st.inputRow}>
-        <div style={st.inputGroup}>
-          <label style={st.inputLabel}>Grafana URL</label>
-          <input
-            type="text"
-            placeholder="https://your-grafana.example.com"
-            value={grafanaUrl}
-            onChange={(e) => setGrafanaUrl(e.target.value)}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={st.input}
-          />
+      {/* ── Target Env (driven by sidebar selector) ── */}
+      <div style={st.sectionLabel}>Target Environment</div>
+      {envConfigured ? (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 16px', borderRadius: 8,
+          background: '#0f172a', border: `1.5px solid ${envColor}`,
+          marginBottom: 16,
+        }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: envColor }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9' }}>{envLabel}</span>
+          <span style={{ fontSize: 13, color: '#94a3b8' }}>{grafanaUrl}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#64748b' }}>
+            {token ? '🔑 token set' : '⚠ no token'}
+          </span>
         </div>
-        <div style={st.inputGroup}>
-          <label style={st.inputLabel}>API Token</label>
-          <input
-            type="password"
-            placeholder="glsa_..."
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={st.input}
-          />
+      ) : (
+        <div style={{
+          padding: '14px 16px', borderRadius: 8, marginBottom: 16,
+          background: 'rgba(234, 179, 8, 0.1)',
+          border: '1.5px solid rgba(234, 179, 8, 0.4)',
+          color: '#fbbf24', fontSize: 13, lineHeight: 1.5,
+        }}>
+          <strong>No environment selected.</strong> Pick a target env in the sidebar, or go to <strong>Settings</strong> to configure DEV/PERF/PROD URLs and tokens first.
         </div>
-      </div>
+      )}
+
+      {/* ── Scope by Datasource (optional) ── */}
+      {envConfigured && (
+        <div style={{ marginBottom: 16 }} data-tour="ds-scope">
+          <div style={st.sectionLabel}>Scope by Datasource (optional)</div>
+          <div style={{
+            padding: '12px 16px', borderRadius: 8,
+            background: '#0f172a',
+            border: `1.5px solid ${datasourceUid ? '#6366f1' : '#1e293b'}`,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>🗄</span>
+              <select
+                value={datasourceUid}
+                onChange={(e) => setDatasourceUid(e.target.value)}
+                disabled={dsLoading}
+                style={{
+                  flex: 1, padding: '8px 12px', borderRadius: 6,
+                  background: '#030712', border: '1px solid #1e293b', color: '#e2e8f0',
+                  fontSize: 13, fontFamily: 'inherit',
+                }}
+              >
+                <option value="">— All resources (no filter) —</option>
+                {datasources.map((d) => (
+                  <option key={d.uid} value={d.uid}>
+                    {d.name} ({d.type}){d.isDefault ? ' · default' : ''}
+                  </option>
+                ))}
+              </select>
+              {datasourceUid && (
+                <button
+                  onClick={() => setDatasourceUid('')}
+                  style={{
+                    background: 'none', border: '1px solid #334155',
+                    color: '#94a3b8', borderRadius: 6, padding: '6px 10px',
+                    fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {dsLoading && (
+              <div style={{ fontSize: 11, color: '#64748b' }}>Loading datasources...</div>
+            )}
+            {!dsLoading && datasources.length === 0 && (
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                No datasources found — verify env credentials in Settings.
+              </div>
+            )}
+            {datasourceUid && dsImpact && (
+              <div style={{
+                padding: '10px 12px', borderRadius: 6,
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                fontSize: 12, color: '#cbd5e1', lineHeight: 1.5,
+              }}>
+                <strong style={{ color: '#a5b4fc' }}>Blast radius:</strong>{' '}
+                {dsImpact.summary?.dashboardCount || 0} dashboard(s),{' '}
+                {dsImpact.summary?.alertCount || 0} alert rule(s) use this datasource.
+                Tests will be scoped to these resources only.
+              </div>
+            )}
+            {datasourceUid && !dsImpact && (
+              <div style={{ fontSize: 11, color: '#64748b' }}>Computing blast radius...</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Run Button ── */}
       <button
-        style={st.runBtn}
+        style={{ ...st.runBtn, opacity: (!envConfigured || selected.size === 0) ? 0.5 : 1 }}
         onClick={handleRun}
-        disabled={selected.size === 0 || phase === 'running'}
+        disabled={selected.size === 0 || phase === 'running' || !envConfigured}
       >
         {phase === 'running' && <span style={st.spinner} />}
         {phase === 'running' ? 'Running Tests...' : 'Run Tests'}

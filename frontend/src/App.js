@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import Sidebar from './components/Common/Sidebar';
-import OnboardingModal from './components/Onboarding/OnboardingModal';
+import UserTour from './components/Onboarding/UserTour';
 import DashboardPage from './components/Dashboard/DashboardPage';
 import TestRunnerPage from './components/TestRunner/TestRunnerPage';
 import ReportsPage from './components/Reports/ReportsPage';
@@ -26,18 +26,11 @@ const mainStyle = {
 };
 
 function AppShell() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    try {
-      const onboarded = localStorage.getItem('grafanaprobe_onboarded');
-      if (!onboarded) setShowOnboarding(true);
-    } catch {}
-  }, []);
+  const { showOnboarding, closeOnboarding } = useApp();
 
   return (
     <BrowserRouter>
-      {showOnboarding && <OnboardingModal onComplete={() => setShowOnboarding(false)} />}
+      {showOnboarding && <UserTour onComplete={closeOnboarding} />}
       <div style={layoutStyle}>
         <Sidebar />
         <main style={mainStyle}>

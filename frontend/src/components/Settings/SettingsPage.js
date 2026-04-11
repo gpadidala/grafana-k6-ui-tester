@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
+import { useApp } from '../../context/AppContext';
 
 /* ── theme tokens ── */
 const C = {
@@ -95,23 +96,12 @@ function useSavedFlash() {
 }
 
 /* ── localStorage helpers ── */
-const LS_ENVS = 'grafana_probe_envs';
 const LS_LLM = 'grafana_probe_llm';
 
-function loadEnvs() {
-  try { return JSON.parse(localStorage.getItem(LS_ENVS)) || null; } catch { return null; }
-}
-function saveEnvs(data) { localStorage.setItem(LS_ENVS, JSON.stringify(data)); }
 function loadLlm() {
   try { return JSON.parse(localStorage.getItem(LS_LLM)) || null; } catch { return null; }
 }
 function saveLlm(data) { localStorage.setItem(LS_LLM, JSON.stringify(data)); }
-
-const DEFAULT_ENVS = [
-  { key: 'DEV', label: 'DEV', color: '#22d3ee', url: '', token: '' },
-  { key: 'PERF', label: 'PERF', color: '#eab308', url: '', token: '' },
-  { key: 'PROD', label: 'PROD', color: '#ef4444', url: '', token: '' },
-];
 
 const LLM_MODELS = {
   None: [],
@@ -121,6 +111,8 @@ const LLM_MODELS = {
 
 /* ═══════════════════════════════════════ */
 export default function SettingsPage() {
+  const { envs, setEnvs, activeEnvKey, setActiveEnvKey, openOnboarding } = useApp();
+
   /* ── Per-environment test state ── */
   const [envTesting, setEnvTesting] = useState({});      // { DEV: true, PERF: false, ... }
   const [envTestResults, setEnvTestResults] = useState({}); // { DEV: {ok, version, ...}, ... }
@@ -141,8 +133,7 @@ export default function SettingsPage() {
     setEnvTesting(p => ({ ...p, [env.key]: false }));
   };
 
-  /* ── Environments ── */
-  const [envs, setEnvs] = useState(() => loadEnvs() || DEFAULT_ENVS);
+  /* ── Environments (sourced from AppContext — shared with sidebar) ── */
   const [expandedEnv, setExpandedEnv] = useState(null);
   const [envSaved, envFlash] = useSavedFlash();
 
@@ -150,9 +141,17 @@ export default function SettingsPage() {
     setEnvs((prev) => prev.map((e) => (e.key === key ? { ...e, [field]: value } : e)));
   };
   const handleSaveEnv = (key) => {
-    saveEnvs(envs);
+    // AppContext auto-persists on setEnvs; this just surfaces the "Saved!" flash
     envFlash();
+    // Auto-select this env as active if none is selected yet
+    if (!activeEnvKey) setActiveEnvKey(key);
   };
+
+  /* ── Server config (retention etc.) ── */
+  const [serverConfig, setServerConfig] = useState(null);
+  useEffect(() => {
+    api.config().then(setServerConfig).catch(() => {});
+  }, []);
 
   /* ── LLM ── */
   const [llm, setLlm] = useState(() => loadLlm() || { provider: 'None', apiKey: '', model: '' });
@@ -167,8 +166,49 @@ export default function SettingsPage() {
     llmFlash();
   };
 
+  /* ── Email / SMTP ── */
+  const [emailCfg, setEmailCfg] = useState({
+    host: '', port: 587, secure: false,
+    user: '', password: '',
+    fromAddress: '', fromName: 'GrafanaProbe',
+    defaultCc: '',
+    enabled: false,
+  });
+  const [emailSaved, emailFlash] = useSavedFlash();
+  const [emailTesting, setEmailTesting] = useState(false);
+  const [emailTestResult, setEmailTestResult] = useState(null);
+  const [testEmailTo, setTestEmailTo] = useState('');
+
+  useEffect(() => {
+    api.getEmailConfig().then((cfg) => { if (cfg && !cfg.error) setEmailCfg(cfg); }).catch(() => {});
+  }, []);
+
+  const updateEmail = (field, value) => {
+    setEmailCfg((p) => ({ ...p, [field]: value }));
+  };
+  const handleSaveEmail = async () => {
+    try {
+      const saved = await api.saveEmailConfig(emailCfg);
+      if (saved && !saved.error) setEmailCfg(saved);
+      emailFlash();
+    } catch (e) {
+      setEmailTestResult({ ok: false, error: e.message });
+    }
+  };
+  const handleTestEmail = async () => {
+    setEmailTesting(true);
+    setEmailTestResult(null);
+    try {
+      const r = await api.sendTestEmail(testEmailTo || emailCfg.fromAddress);
+      setEmailTestResult(r);
+    } catch (e) {
+      setEmailTestResult({ ok: false, error: e.message });
+    }
+    setEmailTesting(false);
+  };
+
   return (
-    <div style={s.page}>
+    <div style={s.page} data-tour="settings-page">
       <h1 style={s.title}>{'\u2699\uFE0F'} Settings</h1>
 
       {/* ── Section 1: Environments (with built-in test) ── */}
@@ -230,6 +270,175 @@ export default function SettingsPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* ── Section 2: Retention ── */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>{'\uD83D\uDDC4\uFE0F'} Test Result Retention</h2>
+        <div style={{
+          padding: '14px 18px', borderRadius: 10,
+          background: '#0f172a', border: `1px solid ${C.border}`,
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 10,
+            background: 'rgba(99, 102, 241, 0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22,
+          }}>📊</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: C.text }}>
+              Keep last {serverConfig?.retention?.maxRunsPerEnv ?? '…'} runs per environment
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+              After each test run completes, older runs for the same environment are automatically pruned
+              (cascading to test results, category results, and latency measurements).
+              Override with the <code style={{ background: C.input, padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>MAX_RUNS_PER_ENV</code> env var in <code style={{ background: C.input, padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>backend/.env</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 2c: Email / SMTP Notifications ── */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>{'\uD83D\uDCE7'} Email Notifications {emailSaved}</h2>
+        <p style={{ fontSize: 12, color: C.muted, margin: '0 0 16px 0', lineHeight: 1.5 }}>
+          Configure SMTP so the 📧 button on each failing test row can send a notification to the
+          dashboard's <strong>created-by</strong> and <strong>last-updated-by</strong> users (resolved via
+          Grafana). The default CC list always receives a copy.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: C.input, border: `1px solid ${C.border}` }}>
+          <input
+            type="checkbox"
+            checked={emailCfg.enabled}
+            onChange={(e) => updateEmail('enabled', e.target.checked)}
+            style={{ width: 16, height: 16, cursor: 'pointer' }}
+          />
+          <label style={{ fontSize: 13, color: C.text, cursor: 'pointer' }} onClick={() => updateEmail('enabled', !emailCfg.enabled)}>
+            Enable email notifications
+          </label>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={s.label}>SMTP Host</label>
+            <StyledInput type="text" placeholder="smtp.gmail.com"
+              value={emailCfg.host} onChange={(e) => updateEmail('host', e.target.value)} />
+          </div>
+          <div>
+            <label style={s.label}>Port</label>
+            <StyledInput type="number" placeholder="587"
+              value={emailCfg.port} onChange={(e) => updateEmail('port', parseInt(e.target.value || 587, 10))} />
+          </div>
+          <div>
+            <label style={s.label}>TLS / SSL</label>
+            <select value={emailCfg.secure ? '1' : '0'}
+              onChange={(e) => updateEmail('secure', e.target.value === '1')}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: C.input, border: `1px solid ${C.border}`, color: C.text, fontSize: 13, fontFamily: 'inherit' }}>
+              <option value="0">STARTTLS (587)</option>
+              <option value="1">SSL/TLS (465)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={s.label}>SMTP Username</label>
+            <StyledInput type="text" placeholder="user@example.com"
+              value={emailCfg.user} onChange={(e) => updateEmail('user', e.target.value)} />
+          </div>
+          <div>
+            <label style={s.label}>SMTP Password</label>
+            <StyledInput type="password" placeholder="••••••••"
+              value={emailCfg.password} onChange={(e) => updateEmail('password', e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={s.label}>From Address</label>
+            <StyledInput type="email" placeholder="grafanaprobe@example.com"
+              value={emailCfg.fromAddress} onChange={(e) => updateEmail('fromAddress', e.target.value)} />
+          </div>
+          <div>
+            <label style={s.label}>From Name</label>
+            <StyledInput type="text" placeholder="GrafanaProbe"
+              value={emailCfg.fromName} onChange={(e) => updateEmail('fromName', e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={s.label}>Default CC (comma-separated, always receives notifications)</label>
+          <StyledInput type="text" placeholder="oncall@example.com, sre-team@example.com"
+            value={emailCfg.defaultCc} onChange={(e) => updateEmail('defaultCc', e.target.value)} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={handleSaveEmail}
+            style={{ padding: '10px 18px', borderRadius: 8, background: C.accent, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Save SMTP Config
+          </button>
+          <span style={{ fontSize: 12, color: C.muted }}>Test:</span>
+          <input type="email" placeholder={emailCfg.fromAddress || 'recipient@example.com'}
+            value={testEmailTo} onChange={(e) => setTestEmailTo(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 6, background: C.input, border: `1px solid ${C.border}`, color: C.text, fontSize: 12, fontFamily: 'inherit', flex: '1 1 200px', minWidth: 200 }} />
+          <button onClick={handleTestEmail} disabled={emailTesting || !emailCfg.host}
+            style={{ padding: '8px 16px', borderRadius: 6, background: 'transparent', color: C.muted, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, cursor: (emailTesting || !emailCfg.host) ? 'not-allowed' : 'pointer', opacity: (emailTesting || !emailCfg.host) ? 0.5 : 1, fontFamily: 'inherit' }}>
+            {emailTesting ? 'Sending…' : 'Send Test Email'}
+          </button>
+        </div>
+
+        {emailTestResult && (
+          <div style={{
+            marginTop: 12, padding: '10px 14px', borderRadius: 8,
+            background: emailTestResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${emailTestResult.ok ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`,
+            color: emailTestResult.ok ? '#10b981' : '#ef4444', fontSize: 12,
+          }}>
+            {emailTestResult.ok
+              ? `✓ Test email sent to ${emailTestResult.sentTo} (messageId: ${(emailTestResult.messageId || '').slice(0, 60)})`
+              : `✗ ${emailTestResult.error || 'Failed to send'}`}
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 2b: Help & Welcome Tour ── */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>{'\u2753'} Help & Welcome Tour</h2>
+        <div style={{
+          padding: '14px 18px', borderRadius: 10,
+          background: '#0f172a', border: `1px solid ${C.border}`,
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 10,
+            background: 'rgba(99, 102, 241, 0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22,
+          }}>🚀</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: C.text }}>
+              Re-open the welcome tour
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+              Walk through the 4-step onboarding again. Useful for demos or
+              when showing GrafanaProbe to a new teammate. The tour also
+              auto-shows once after app version bumps.
+            </div>
+          </div>
+          <button
+            onClick={openOnboarding}
+            style={{
+              padding: '10px 18px', borderRadius: 8,
+              background: C.accent, color: '#fff', border: 'none',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Show Tour
+          </button>
+        </div>
       </div>
 
       {/* ── Section 3: LLM / AI ── */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { getSocket } from '../../services/socket';
+import { useActiveEnv } from '../../context/AppContext';
 
 /* ── theme tokens (matches ReportsPage) ── */
 const C = {
@@ -210,6 +211,70 @@ const s = {
   },
 };
 
+/* ── diff-item normalizer ──
+   Backend returns snake_case SQL columns (dashboard_uid, dashboard_title,
+   before_value, after_value, change_type, risk_level, ai_explanation).
+   The UI was written expecting camelCase. Normalize to a uniform shape
+   so we only write the rendering code once. */
+function normalizeDiffItem(raw) {
+  if (!raw) return raw;
+  const parseMaybe = (v) => {
+    if (v == null) return null;
+    if (typeof v !== 'string') return v;
+    try { return JSON.parse(v); } catch { return v; }
+  };
+  return {
+    id: raw.id,
+    dashboardUid: raw.dashboard_uid || raw.dashboardUid || null,
+    dashboardTitle: raw.dashboard_title || raw.dashboardTitle || '',
+    panelId: raw.panel_id ?? raw.panelId ?? null,
+    panelTitle: raw.panel_title || raw.panelTitle || '',
+    path: raw.path || '',
+    changeType: raw.change_type || raw.changeType || 'UNKNOWN',
+    risk: (raw.risk_level || raw.riskLevel || 'info').toLowerCase(),
+    before: parseMaybe(raw.before_value ?? raw.before),
+    after: parseMaybe(raw.after_value ?? raw.after),
+    explanation: raw.ai_explanation || raw.explanation || '',
+    recommendation: raw.ai_recommendation || raw.recommendation || '',
+    acknowledged: !!(raw.acknowledged),
+  };
+}
+
+/* ── line-level LCS diff ──
+   Returns an array of {type: 'equal'|'added'|'removed', line} entries.
+   Small enough to inline; avoids pulling in a diff library. */
+function lineDiff(beforeStr, afterStr) {
+  const a = (beforeStr || '').split('\n');
+  const b = (afterStr || '').split('\n');
+  const m = a.length;
+  const n = b.length;
+  // DP table: dp[i][j] = LCS length of a[i..] and b[j..]
+  const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      if (a[i] === b[j]) dp[i][j] = dp[i + 1][j + 1] + 1;
+      else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < m && j < n) {
+    if (a[i] === b[j]) { out.push({ type: 'equal', line: a[i] }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ type: 'removed', line: a[i] }); i++; }
+    else { out.push({ type: 'added', line: b[j] }); j++; }
+  }
+  while (i < m) { out.push({ type: 'removed', line: a[i++] }); }
+  while (j < n) { out.push({ type: 'added', line: b[j++] }); }
+  return out;
+}
+
+function toJsonString(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+}
+
 /* inject keyframes once */
 let kfInjected = false;
 function injectKf() {
@@ -290,6 +355,7 @@ function CreateModal({ onSave, onClose, saving }) {
 
 /* ── main page ── */
 export default function SnapshotsPage() {
+  const { grafanaUrl, token, label: envLabel, isConfigured: envConfigured } = useActiveEnv();
   const [tab, setTab] = useState('snapshots');
   const [snapshots, setSnapshots] = useState([]);
   const [diffs, setDiffs] = useState([]);
@@ -367,9 +433,13 @@ export default function SnapshotsPage() {
 
   /* handlers */
   async function handleCreateSnapshot(name, notes) {
+    if (!envConfigured) {
+      alert('No environment selected. Pick a target env in the sidebar (Settings → configure URL + token).');
+      return;
+    }
     setCreating(true);
     try {
-      await api.createSnapshot({ name, notes });
+      await api.createSnapshot({ name, notes, grafanaUrl, token });
       setCreateModalOpen(false);
       await loadAll();
     } catch (e) {
@@ -417,7 +487,13 @@ export default function SnapshotsPage() {
     setExpandedItemId(null);
     try {
       const full = await api.getDiff(diffId);
-      setSelectedDiff(full);
+      // Normalize items (backend returns snake_case) so the UI can read
+      // camelCase fields uniformly
+      const normalized = {
+        ...full,
+        items: Array.isArray(full?.items) ? full.items.map(normalizeDiffItem) : [],
+      };
+      setSelectedDiff(normalized);
     } catch (e) {
       console.error('Failed to load diff', e);
       setSelectedDiff(null);
@@ -463,19 +539,21 @@ export default function SnapshotsPage() {
     return (
       <div style={s.grid}>
         {snapshots.map((snap) => {
-          const dashCount = snap.dashboardCount ?? snap.dashboards?.length ?? 0;
-          const panelCount = snap.panelCount ?? 0;
-          const ver = snap.grafanaVersion || snap.version || '--';
+          const dashCount = snap.dashboard_count ?? snap.dashboardCount ?? snap.dashboards?.length ?? 0;
+          const panelCount = snap.panel_count ?? snap.panelCount ?? 0;
+          const alertCount = snap.alert_count ?? snap.alertCount ?? 0;
+          const ver = snap.grafana_version || snap.grafanaVersion || snap.version || '--';
+          const createdAt = snap.created_at || snap.createdAt || snap.timestamp;
           return (
             <div key={snap.id} style={s.snapCard}>
               <div style={s.snapName}>{snap.name || snap.id}</div>
-              <div style={s.snapMeta}>{fmtDate(snap.createdAt || snap.timestamp)}</div>
+              <div style={s.snapMeta}>{fmtDate(createdAt)}</div>
               <div style={s.snapMeta}>Grafana {ver}</div>
               {snap.notes && (
                 <div style={{ ...s.snapMeta, fontStyle: 'italic', marginTop: 6 }}>{snap.notes}</div>
               )}
               <div style={s.snapSummary}>
-                {dashCount} dashboards, {panelCount} panels
+                {dashCount} dashboards, {panelCount} panels{alertCount > 0 ? `, ${alertCount} alert rules` : ''}
               </div>
               <div style={s.snapActions}>
                 <button style={s.secondaryBtn} onClick={() => {
@@ -554,7 +632,7 @@ export default function SnapshotsPage() {
     const items = (detail.items || []).filter((it) => {
       if (riskFilter !== 'all' && (it.risk || '').toLowerCase() !== riskFilter) return false;
       if (searchText) {
-        const hay = [it.dashboard, it.panel, it.path, it.explanation, it.changeType].join(' ').toLowerCase();
+        const hay = [it.dashboardTitle, it.dashboardUid, it.panelTitle, it.path, it.explanation, it.changeType].join(' ').toLowerCase();
         if (!hay.includes(searchText.toLowerCase())) return false;
       }
       return true;
@@ -563,20 +641,29 @@ export default function SnapshotsPage() {
     return (
       <div style={s.diffLayout}>
         <div style={s.diffSidebar}>
-          {diffs.map((d) => (
-            <div key={d.id} style={s.diffSideItem(selectedDiffId === d.id)}
-              onClick={() => handleViewDiff(d.id)}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                {d.name || d.id}
+          {diffs.map((d) => {
+            const total = d.total_changes ?? d.summary?.total ?? 0;
+            const crit = d.critical_count ?? 0;
+            const high = d.high_count ?? 0;
+            const created = d.created_at || d.createdAt;
+            return (
+              <div key={d.id} style={s.diffSideItem(selectedDiffId === d.id)}
+                onClick={() => handleViewDiff(d.id)}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  {total} {total === 1 ? 'change' : 'changes'}
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                  {fmtDate(created)}
+                </div>
+                {(crit > 0 || high > 0) && (
+                  <div style={{ fontSize: 10, marginTop: 4, display: 'flex', gap: 6 }}>
+                    {crit > 0 && <span style={{ color: '#ef4444', fontWeight: 700 }}>{crit} critical</span>}
+                    {high > 0 && <span style={{ color: '#f97316', fontWeight: 700 }}>{high} high</span>}
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                {fmtDate(d.createdAt || d.timestamp)}
-              </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                {(d.summary?.total ?? d.itemCount ?? 0)} changes
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div style={s.diffDetail}>
@@ -646,47 +733,137 @@ export default function SnapshotsPage() {
                       const id = it.id || `${idx}`;
                       const isOpen = expandedItemId === id;
                       const risk = (it.risk || 'info').toLowerCase();
+                      const beforeStr = toJsonString(it.before);
+                      const afterStr = toJsonString(it.after);
+                      const grafanaUrl = (selectedDiff?.grafana_url || snapshots.find(sn => sn.id === selectedDiff?.current_snapshot_id)?.grafana_url || '').replace(/\/+$/, '');
+                      const liveLink = (grafanaUrl && it.dashboardUid && it.changeType !== 'DASHBOARD_REMOVED')
+                        ? `${grafanaUrl}/d/${it.dashboardUid}`
+                        : null;
                       return (
                         <React.Fragment key={id}>
                           <tr style={{ cursor: 'pointer' }}
                             onClick={() => setExpandedItemId(isOpen ? null : id)}>
-                            <td style={s.td}>{it.dashboard || '--'}</td>
-                            <td style={s.td}>{it.panel || '--'}</td>
+                            <td style={s.td}>
+                              <div style={{ fontWeight: 600, color: C.text, fontSize: 13 }}>
+                                {it.dashboardTitle || '(untitled)'}
+                              </div>
+                              {it.dashboardUid && (
+                                <div style={{ fontSize: 10, color: C.muted, marginTop: 2, fontFamily: 'ui-monospace, Menlo, monospace' }}>
+                                  {it.dashboardUid}
+                                </div>
+                              )}
+                            </td>
+                            <td style={s.td}>
+                              {it.panelTitle ? (
+                                <>
+                                  <div style={{ fontSize: 12, color: C.text }}>{it.panelTitle}</div>
+                                  {it.panelId != null && (
+                                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>id {it.panelId}</div>
+                                  )}
+                                </>
+                              ) : '--'}
+                            </td>
                             <td style={s.td}>
                               <Badge text={it.changeType || 'change'} color={C.accent} />
                             </td>
                             <td style={s.td}>
                               <Badge text={risk} color={RISK_COLORS[risk] || C.gray} />
                             </td>
-                            <td style={{ ...s.td, fontFamily: 'ui-monospace, Menlo, monospace', color: C.muted, maxWidth: 220, wordBreak: 'break-all' }}>
+                            <td style={{ ...s.td, fontFamily: 'ui-monospace, Menlo, monospace', color: C.muted, maxWidth: 220, wordBreak: 'break-all', fontSize: 11 }}>
                               {it.path || '--'}
                             </td>
-                            <td style={{ ...s.td, color: C.muted, maxWidth: 260 }}>
+                            <td style={{ ...s.td, color: C.muted, maxWidth: 260, fontSize: 12 }}>
                               {it.explanation || '--'}
                             </td>
                             <td style={s.td}>
-                              {!it.acknowledged ? (
-                                <button style={s.ghostBtn}
-                                  onClick={(e) => { e.stopPropagation(); handleAcknowledge(id); }}>
-                                  Ack
-                                </button>
-                              ) : (
-                                <span style={{ color: C.green, fontSize: 11, fontWeight: 600 }}>✓ Acked</span>
-                              )}
+                              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                {liveLink && (
+                                  <a href={liveLink} target="_blank" rel="noopener noreferrer"
+                                    style={{ color: '#818cf8', fontSize: 11, textDecoration: 'none' }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={`Open in Grafana: ${liveLink}`}>
+                                    Open ↗
+                                  </a>
+                                )}
+                                {!it.acknowledged ? (
+                                  <button style={s.ghostBtn}
+                                    onClick={(e) => { e.stopPropagation(); handleAcknowledge(id); }}>
+                                    Ack
+                                  </button>
+                                ) : (
+                                  <span style={{ color: C.green, fontSize: 11, fontWeight: 600 }}>✓</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                           {isOpen && (
                             <tr>
                               <td colSpan={7} style={{ padding: 0, borderBottom: `1px solid ${C.border}55` }}>
                                 <div style={s.expandedRow}>
-                                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Before / After</div>
+                                  {/* Unified diff — the "what actually changed" view */}
+                                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                    What changed
+                                  </div>
+                                  <pre style={{
+                                    background: '#0a0f1c', border: `1px solid ${C.border}`, borderRadius: 8,
+                                    padding: 12, margin: 0, fontSize: 11, lineHeight: 1.5,
+                                    fontFamily: 'ui-monospace, Menlo, monospace',
+                                    overflowX: 'auto', maxHeight: 400,
+                                  }}>
+                                    {(() => {
+                                      if (!beforeStr && afterStr) {
+                                        return afterStr.split('\n').map((ln, i) => (
+                                          <div key={i} style={{ color: '#10b981', background: 'rgba(16,185,129,0.08)', padding: '0 8px' }}>
+                                            + {ln}
+                                          </div>
+                                        ));
+                                      }
+                                      if (beforeStr && !afterStr) {
+                                        return beforeStr.split('\n').map((ln, i) => (
+                                          <div key={i} style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', padding: '0 8px' }}>
+                                            - {ln}
+                                          </div>
+                                        ));
+                                      }
+                                      const diff = lineDiff(beforeStr, afterStr);
+                                      // Collapse long runs of unchanged lines into "..." markers
+                                      const compact = [];
+                                      let equalRun = 0;
+                                      for (let i = 0; i < diff.length; i++) {
+                                        const d = diff[i];
+                                        if (d.type === 'equal') {
+                                          equalRun++;
+                                          // Show up to 2 context lines around changes
+                                          const nextChange = diff.slice(i + 1, i + 3).some(x => x.type !== 'equal');
+                                          const prevChange = compact.length > 0 && compact[compact.length - 1].type !== 'equal';
+                                          if (nextChange || prevChange || equalRun <= 2) compact.push(d);
+                                          else if (compact[compact.length - 1]?.type !== 'gap') compact.push({ type: 'gap', line: '...' });
+                                        } else {
+                                          equalRun = 0;
+                                          compact.push(d);
+                                        }
+                                      }
+                                      return compact.map((d, i) => {
+                                        if (d.type === 'equal')
+                                          return <div key={i} style={{ color: '#64748b', padding: '0 8px' }}>  {d.line}</div>;
+                                        if (d.type === 'gap')
+                                          return <div key={i} style={{ color: '#475569', padding: '2px 8px', fontStyle: 'italic' }}>...</div>;
+                                        if (d.type === 'removed')
+                                          return <div key={i} style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', padding: '0 8px' }}>- {d.line}</div>;
+                                        if (d.type === 'added')
+                                          return <div key={i} style={{ color: '#10b981', background: 'rgba(16,185,129,0.08)', padding: '0 8px' }}>+ {d.line}</div>;
+                                        return null;
+                                      });
+                                    })()}
+                                  </pre>
+
+                                  {/* Side-by-side raw JSON */}
+                                  <div style={{ fontSize: 12, color: C.muted, marginTop: 16, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                    Before · After (raw)
+                                  </div>
                                   <div style={s.jsonCols}>
-                                    <pre style={s.jsonBlock}>
-{typeof it.before === 'object' ? JSON.stringify(it.before, null, 2) : String(it.before ?? '(none)')}
-                                    </pre>
-                                    <pre style={s.jsonBlock}>
-{typeof it.after === 'object' ? JSON.stringify(it.after, null, 2) : String(it.after ?? '(none)')}
-                                    </pre>
+                                    <pre style={s.jsonBlock}>{beforeStr || '(none)'}</pre>
+                                    <pre style={s.jsonBlock}>{afterStr || '(none)'}</pre>
                                   </div>
                                 </div>
                               </td>
@@ -739,7 +916,7 @@ export default function SnapshotsPage() {
   };
 
   return (
-    <div style={s.page}>
+    <div style={s.page} data-tour="snapshots-page">
       <header style={s.header}>
         <div style={s.titleRow}>
           <h1 style={s.title}>{'\uD83D\uDCF8'} Dashboard Snapshots</h1>

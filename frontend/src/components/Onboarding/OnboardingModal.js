@@ -125,7 +125,9 @@ export default function OnboardingModal({ onComplete }) {
 
   const finish = () => {
     if (name.trim()) setUserName(name.trim());
-    try { localStorage.setItem('grafanaprobe_onboarded', '1'); } catch {}
+    // Versioned onboarded flag is written by AppContext.closeOnboarding
+    // (which is what `onComplete` points at). Keep the default-env
+    // side-channel here since it's unrelated to the tour version.
     if (env) try { localStorage.setItem('grafanaprobe_default_env', env); } catch {}
     onComplete && onComplete();
   };

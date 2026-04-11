@@ -179,7 +179,7 @@ export default function ComparePage() {
   const metaB = reports.find((r) => r.id === runB);
 
   return (
-    <div style={s.page}>
+    <div style={s.page} data-tour="compare-page">
       <h1 style={s.title}>{'\uD83D\uDD0D'} Compare Runs</h1>
 
       {/* selectors */}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const NAV_ITEMS = [
   { icon: '📊', label: 'Dashboard', path: '/' },
@@ -34,6 +35,40 @@ const SIDEBAR_CSS = `
   background-color: rgba(99, 102, 241, 0.15); border-radius: 9999px; vertical-align: middle;
 }
 .gp-sidebar-subtitle { font-size: 12px; color: #94a3b8; margin-top: 6px; padding-left: 2px; }
+
+/* Env selector */
+.gp-env-selector {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #1e293b;
+}
+.gp-env-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: #64748b; margin-bottom: 8px;
+}
+.gp-env-pills { display: flex; gap: 6px; }
+.gp-env-pill {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 6px; border-radius: 8px;
+  font-size: 11px; font-weight: 700;
+  background: #0f172a; border: 1.5px solid #1e293b; color: #64748b;
+  cursor: pointer; transition: all 0.15s ease;
+  font-family: inherit;
+}
+.gp-env-pill:hover { background: #1e293b; color: #cbd5e1; }
+.gp-env-pill.gp-env-active {
+  color: #f1f5f9; background: rgba(99, 102, 241, 0.08);
+}
+.gp-env-pill.gp-env-not-configured {
+  opacity: 0.5;
+}
+.gp-env-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.gp-env-warning {
+  margin-top: 8px; padding: 6px 8px; border-radius: 6px;
+  background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3);
+  font-size: 10px; color: #eab308; line-height: 1.3;
+}
 .gp-sidebar-nav { flex: 1; padding: 12px 0; }
 
 /* Nav item base */
@@ -59,9 +94,26 @@ const SIDEBAR_CSS = `
   font-weight: 600;
 }
 .gp-nav-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
-.gp-sidebar-bottom { padding: 16px 20px; border-top: 1px solid #1e293b; }
+.gp-sidebar-bottom {
+  padding: 16px 20px; border-top: 1px solid #1e293b;
+  display: flex; align-items: center; gap: 10px;
+}
+.gp-sidebar-bottom-left { flex: 1; min-width: 0; }
 .gp-sidebar-cats { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
 .gp-sidebar-version { font-size: 11px; color: #475569; }
+.gp-sidebar-help {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: transparent; border: 1px solid #1e293b;
+  color: #64748b; font-size: 16px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease; flex-shrink: 0;
+}
+.gp-sidebar-help:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: #6366f1;
+  color: #a5b4fc;
+}
 `;
 
 let cssInjected = false;
@@ -76,8 +128,11 @@ function injectCss() {
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { envs, activeEnvKey, setActiveEnvKey, activeEnv, openOnboarding } = useApp();
 
   React.useEffect(() => { injectCss(); }, []);
+
+  const needsConfig = !activeEnv || !activeEnv.url;
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -103,6 +158,35 @@ export default function Sidebar() {
         <div className="gp-sidebar-subtitle">by Gopal Rao</div>
       </div>
 
+      <div className="gp-env-selector" data-tour="env-pills">
+        <div className="gp-env-label">Target Environment</div>
+        <div className="gp-env-pills">
+          {envs.map((env) => {
+            const isSelected = activeEnvKey === env.key;
+            const hasUrl = Boolean(env.url);
+            return (
+              <button
+                key={env.key}
+                className={`gp-env-pill${isSelected ? ' gp-env-active' : ''}${!hasUrl ? ' gp-env-not-configured' : ''}`}
+                style={isSelected ? { borderColor: env.color, boxShadow: `0 0 0 1px ${env.color}40` } : {}}
+                onClick={(e) => { e.currentTarget.blur(); setActiveEnvKey(env.key); }}
+                title={hasUrl ? env.url : 'Not configured — go to Settings'}
+              >
+                <span className="gp-env-dot" style={{ background: env.color }} />
+                {env.label}
+              </button>
+            );
+          })}
+        </div>
+        {needsConfig && (
+          <div className="gp-env-warning">
+            {!activeEnv
+              ? 'No environment selected — pick one above'
+              : `${activeEnv.label} has no URL — configure in Settings`}
+          </div>
+        )}
+      </div>
+
       <nav className="gp-sidebar-nav">
         {NAV_ITEMS.map((item) => (
           <button
@@ -117,8 +201,19 @@ export default function Sidebar() {
       </nav>
 
       <div className="gp-sidebar-bottom">
-        <div className="gp-sidebar-cats">21 test categories</div>
-        <div className="gp-sidebar-version">GrafanaProbe v2.0.0</div>
+        <div className="gp-sidebar-bottom-left">
+          <div className="gp-sidebar-cats">22 test categories</div>
+          <div className="gp-sidebar-version">GrafanaProbe v2.0.0</div>
+        </div>
+        <button
+          className="gp-sidebar-help"
+          data-tour="help-button"
+          onClick={(e) => { e.currentTarget.blur(); openOnboarding(); }}
+          title="Show welcome tour"
+          aria-label="Show welcome tour"
+        >
+          ?
+        </button>
       </div>
     </aside>
   );

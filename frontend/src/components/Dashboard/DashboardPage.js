@@ -318,7 +318,7 @@ export default function DashboardPage() {
   const displayName = userName || 'User';
 
   return (
-    <div style={s.page}>
+    <div style={s.page} data-tour="dashboard-page">
       {/* Hero Row */}
       <div style={s.heroRow}>
         <h1 style={s.greeting}>
@@ -358,7 +358,11 @@ export default function DashboardPage() {
               <span style={s.catIcon}>{cat.icon || '📦'}</span>
               <span style={s.catName}>{cat.name}</span>
               {status && <StatusBadge status={status} size="sm" />}
-              <button className="gp-cat-run-btn" style={s.catRunBtn} onClick={() => navigate('/run')}>
+              <button
+                className="gp-cat-run-btn"
+                style={s.catRunBtn}
+                onClick={() => navigate('/run', { state: { preselectCategory: cat.id } })}
+              >
                 ▶ Run
               </button>
             </div>
