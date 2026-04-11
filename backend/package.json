@@ -1,7 +1,7 @@
 {
-  "name": "grafana-probe-backend",
-  "version": "2.0.0",
-  "description": "GrafanaProbe backend — test engine, API, WebSocket",
+  "name": "heimdall-backend",
+  "version": "3.0.0",
+  "description": "Heimdall backend — test engine, API, WebSocket. The watchman of your observability stack.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

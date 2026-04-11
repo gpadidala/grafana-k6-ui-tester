@@ -1,6 +1,6 @@
 # AI Failure Analysis
 
-When a test fails, GrafanaProbe can send the failure context to an LLM (OpenAI or Anthropic Claude) and get a plain-English explanation with recommended fixes, right next to the red badge in your report.
+When a test fails, Heimdall can send the failure context to an LLM (OpenAI or Anthropic Claude) and get a plain-English explanation with recommended fixes, right next to the red badge in your report.
 
 ## Supported providers
 

@@ -1,6 +1,6 @@
 ---
 name: ✨ Feature request
-about: Suggest a new capability or improvement for GrafanaProbe
+about: Suggest a new capability or improvement for Heimdall
 title: "[Feature] "
 labels: enhancement
 assignees: gpadidala
@@ -19,7 +19,7 @@ What you'd like to see happen. Be concrete — "a new test category called X tha
 
 Any workarounds you've tried, or other tools you looked at.
 
-## 🧩 Which area of GrafanaProbe?
+## 🧩 Which area of Heimdall?
 
 - [ ] New test category
 - [ ] Existing test category enhancement
@@ -34,7 +34,7 @@ Any workarounds you've tried, or other tools you looked at.
 
 ## 📏 How critical is this for your use case?
 
-- [ ] Blocker — can't adopt GrafanaProbe without this
+- [ ] Blocker — can't adopt Heimdall without this
 - [ ] High — significant pain point
 - [ ] Medium — nice to have
 - [ ] Low — exploratory idea

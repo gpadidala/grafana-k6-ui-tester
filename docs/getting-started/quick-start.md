@@ -2,13 +2,13 @@
 
 Zero to first test run in 90 seconds.
 
-## 1. Start GrafanaProbe
+## 1. Start Heimdall
 
 If you already installed, skip to step 2. Otherwise:
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe && ./demo-run.sh
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall && ./demo-run.sh
 ```
 
 Open **<http://localhost:3001>**.

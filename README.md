@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="GrafanaProbe" width="180">
+  <img src="docs/assets/logo.svg" alt="Heimdall" width="180">
 </p>
 
-<h1 align="center">GrafanaProbe</h1>
+<h1 align="center">Heimdall</h1>
 
 <p align="center"><em>One platform. Three engines. Every layer of your Grafana stack.<br>K6 API tests · Playwright E2E · JMeter performance — plus AI-generated test suites, failure analysis, and a dependency graph.</em></p>
 
@@ -10,9 +10,9 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg?style=flat-square" alt="Node >=18">
   <img src="https://img.shields.io/badge/Grafana-9.x%E2%80%9312.x-F46800.svg?style=flat-square&logo=grafana&logoColor=white" alt="Grafana 9.x-12.x">
-  <img src="https://img.shields.io/docker/pulls/gpadidala/grafanaprobe?style=flat-square&logo=docker&logoColor=white" alt="Docker pulls">
-  <img src="https://img.shields.io/github/last-commit/gpadidala/grafana-probe?style=flat-square" alt="Last commit">
-  <img src="https://img.shields.io/github/stars/gpadidala/grafana-probe?style=flat-square" alt="GitHub stars">
+  <img src="https://img.shields.io/docker/pulls/gpadidala/heimdall?style=flat-square&logo=docker&logoColor=white" alt="Docker pulls">
+  <img src="https://img.shields.io/github/last-commit/gpadidala/heimdall?style=flat-square" alt="Last commit">
+  <img src="https://img.shields.io/github/stars/gpadidala/heimdall?style=flat-square" alt="GitHub stars">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs welcome">
   <img src="https://img.shields.io/badge/made%20with-%E2%9D%A4-red?style=flat-square" alt="Made with love">
 </p>
@@ -28,18 +28,18 @@
 ---
 
 <p align="center">
-  <img src="docs/assets/grafana-probe-demo.gif" alt="GrafanaProbe 60-second walkthrough" width="100%">
+  <img src="docs/assets/heimdall-demo.gif" alt="Heimdall 60-second walkthrough" width="100%">
 </p>
 
 ---
 
-## 🤔 Why GrafanaProbe?
+## 🤔 Why Heimdall?
 
 Grafana is the default observability UI for most infrastructure teams — but **upgrades, plugin updates, and silent config drift break dashboards in ways you only discover during an incident**. A renamed datasource breaks 40 panels. A schema version bump turns graph panels into empty rectangles. An alert rule loses its receiver. And nobody notices until the on-call engineer is staring at a blank screen at 3am.
 
-**Before GrafanaProbe**, you had three separate tools: K6 scripts for API load, Playwright specs for browser tests, JMeter JMX files for performance. Each with its own runner, its own results, its own CI wiring. And zero visibility into how they connect to each other or to the dashboards that actually matter.
+**Before Heimdall**, you had three separate tools: K6 scripts for API load, Playwright specs for browser tests, JMeter JMX files for performance. Each with its own runner, its own results, its own CI wiring. And zero visibility into how they connect to each other or to the dashboards that actually matter.
 
-**GrafanaProbe unifies all three engines into one platform**: **K6 API tests** (22 categories of functional checks), **Playwright E2E** (12 real-browser suites), and **JMeter performance** (18 load plans) — all driven from one React UI, one set of credentials, one results database. Add **AI-generated test suites** on top (describe what you want to test in plain English, Claude or GPT writes a safe read-only test plan you can approve and run) and **AI-powered failure analysis** that explains every red badge in plain English.
+**Heimdall unifies all three engines into one platform**: **K6 API tests** (22 categories of functional checks), **Playwright E2E** (12 real-browser suites), and **JMeter performance** (18 load plans) — all driven from one React UI, one set of credentials, one results database. Add **AI-generated test suites** on top (describe what you want to test in plain English, Claude or GPT writes a safe read-only test plan you can approve and run) and **AI-powered failure analysis** that explains every red badge in plain English.
 
 Built for **SREs, Platform Engineers, and Grafana Admins** who run Grafana as critical infrastructure. If your org has more than 50 dashboards, more than one environment, or upgrades Grafana without a panic room on the calendar — this is for you.
 
@@ -71,7 +71,7 @@ Built for **SREs, Platform Engineers, and Grafana Admins** who run Grafana as cr
 
 ## ⚡ Three Engines. One Platform.
 
-Most teams stitch together three separate tools for Grafana testing. GrafanaProbe gives you all three under one roof with a shared results store, one set of credentials, and a unified Run Tests UI:
+Most teams stitch together three separate tools for Grafana testing. Heimdall gives you all three under one roof with a shared results store, one set of credentials, and a unified Run Tests UI:
 
 <table>
   <tr>
@@ -97,7 +97,7 @@ Most teams stitch together three separate tools for Grafana testing. GrafanaProb
 
 ## 🧠 AI Test Suites — describe, approve, run
 
-Beyond AI *failure analysis*, GrafanaProbe ships with a full **AI Dynamic Test Generator** that turns natural-language prompts into executable test plans:
+Beyond AI *failure analysis*, Heimdall ships with a full **AI Dynamic Test Generator** that turns natural-language prompts into executable test plans:
 
 ```
 "Verify my Grafana is ready for an upgrade — check all datasources are
@@ -120,7 +120,7 @@ See [AI Test Generator docs](docs/features/ai-analysis.md) for the full action v
 
 ## 🆚 Why not just write a bash script?
 
-| Feature | **GrafanaProbe** | Bash scripts | Manual testing |
+| Feature | **Heimdall** | Bash scripts | Manual testing |
 |---|:---:|:---:|:---:|
 | 17 test categories out of the box | ✅ | ❌ | ❌ |
 | Grafana 9.x – 12.x version handling | ✅ | ⚠️ brittle | ✅ |
@@ -131,7 +131,7 @@ See [AI Test Generator docs](docs/features/ai-analysis.md) for the full action v
 | Real-time progress for long runs | ✅ | ❌ | ❌ |
 | Zero maintenance when Grafana API changes | ✅ | ❌ | N/A |
 
-Bash scripts are easy to start, impossible to maintain, and silently rot. GrafanaProbe is the maintained alternative.
+Bash scripts are easy to start, impossible to maintain, and silently rot. Heimdall is the maintained alternative.
 
 ---
 
@@ -197,7 +197,7 @@ Bash scripts are easy to start, impossible to maintain, and silently rot. Grafan
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
-│                         GrafanaProbe v2                           │
+│                         Heimdall v2                           │
 └───────────────────────────────────────────────────────────────────┘
 
     ┌──────────────┐      WebSocket + REST      ┌──────────────┐
@@ -228,14 +228,14 @@ The React UI talks to the Express API over REST for commands and over WebSocket 
 ### Option A — Docker Demo *(recommended, 60 seconds)*
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall
 ./demo-run.sh
 ```
 
 Then open **<http://localhost:3001>** and click **Run Tests** — pick any engine tab (K6 API / Playwright E2E / JMeter) and go.
 
-> 💡 **Tip:** The demo spins up a pre-configured Grafana instance with 7 sample dashboards — no need to connect your own Grafana to try GrafanaProbe. Your first K6 run finishes in under 30 seconds. You'll also have **AI Tests** ready to go (add an LLM key in Settings) and the **dependency graph** populated from real data.
+> 💡 **Tip:** The demo spins up a pre-configured Grafana instance with 7 sample dashboards — no need to connect your own Grafana to try Heimdall. Your first K6 run finishes in under 30 seconds. You'll also have **AI Tests** ready to go (add an LLM key in Settings) and the **dependency graph** populated from real data.
 
 ### Option B — Manual setup
 
@@ -245,8 +245,8 @@ Then open **<http://localhost:3001>** and click **Run Tests** — pick any engin
 **1. Clone and install the backend**
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe/backend
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall/backend
 npm install
 ```
 
@@ -464,7 +464,7 @@ Local development, code style, commit conventions, and the test harness are docu
 
 ## 🙏 Acknowledgments
 
-Built for the Grafana community — and for every on-call engineer who's ever stared at a broken dashboard at 3am wondering which upgrade caused it. Special thanks to the teams behind the libraries that make GrafanaProbe possible:
+Built for the Grafana community — and for every on-call engineer who's ever stared at a broken dashboard at 3am wondering which upgrade caused it. Special thanks to the teams behind the libraries that make Heimdall possible:
 
 **[React](https://react.dev)** · **[Express](https://expressjs.com)** · **[sql.js](https://sql.js.org)** · **[Socket.IO](https://socket.io)** · **[Axios](https://axios-http.com)** · **[Playwright](https://playwright.dev)** · **[Recharts](https://recharts.org)** · **[Nodemailer](https://nodemailer.com)**
 
@@ -489,7 +489,7 @@ Copyright © 2026 Gopal Rao.
 ---
 
 <p align="center">
-  ⭐ <b>If GrafanaProbe helps you, please star the repo — it helps others discover it.</b>
+  ⭐ <b>If Heimdall helps you, please star the repo — it helps others discover it.</b>
 </p>
 
 <p align="center">

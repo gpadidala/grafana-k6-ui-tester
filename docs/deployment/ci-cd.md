@@ -1,6 +1,6 @@
 # CI/CD Integration
 
-GrafanaProbe drops into any CI system that can make an HTTP call. The usual workflow: run a subset of categories as a post-deploy gate, fail the pipeline if the pass rate drops below a threshold.
+Heimdall drops into any CI system that can make an HTTP call. The usual workflow: run a subset of categories as a post-deploy gate, fail the pipeline if the pass rate drops below a threshold.
 
 ## GitHub Actions
 
@@ -11,9 +11,9 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Run GrafanaProbe
+      - name: Run Heimdall
         run: |
-          RESULT=$(curl -sf -X POST http://grafana-probe.internal:4000/api/tests/run \
+          RESULT=$(curl -sf -X POST http://heimdall.internal:4000/api/tests/run \
             -H 'Content-Type: application/json' \
             -d '{
               "envKey": "PROD",
@@ -47,7 +47,7 @@ grafana_validation:
 
 ## Jenkins
 
-Same pattern inside a `sh` step. See the [full Jenkins example](https://github.com/gpadidala/grafana-probe/tree/main/examples/jenkinsfile).
+Same pattern inside a `sh` step. See the [full Jenkins example](https://github.com/gpadidala/heimdall/tree/main/examples/jenkinsfile).
 
 ## Tips
 

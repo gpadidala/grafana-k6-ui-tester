@@ -1,6 +1,6 @@
 # Installation
 
-GrafanaProbe runs as a Node.js backend (port 4000) plus a React frontend (port 3001). You can install it three ways: Docker (recommended), manual local install, or from a release archive.
+Heimdall runs as a Node.js backend (port 4000) plus a React frontend (port 3001). You can install it three ways: Docker (recommended), manual local install, or from a release archive.
 
 ## Prerequisites
 
@@ -12,18 +12,18 @@ GrafanaProbe runs as a Node.js backend (port 4000) plus a React frontend (port 3
 ## Option 1 — Docker *(recommended)*
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall
 ./demo-run.sh
 ```
 
-The demo script boots a pre-configured Grafana instance alongside GrafanaProbe so you can try it without any setup. See [Docker deployment](../deployment/docker.md) for production configs.
+The demo script boots a pre-configured Grafana instance alongside Heimdall so you can try it without any setup. See [Docker deployment](../deployment/docker.md) for production configs.
 
 ## Option 2 — Manual local install
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall
 
 # Backend
 cd backend && npm install && npx playwright install chromium

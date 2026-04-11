@@ -100,8 +100,8 @@ export default function DashboardPage() {
   const handleRunAll = async () => {
     setRunning(true);
     try {
-      const grafanaUrl = localStorage.getItem('grafanaprobe_grafanaUrl') || '';
-      const token = localStorage.getItem('grafanaprobe_token') || '';
+      const grafanaUrl = localStorage.getItem('heimdall_grafanaUrl') || '';
+      const token = localStorage.getItem('heimdall_token') || '';
       const catIds = categories.map((c) => c.id);
       await api.runTests({ grafanaUrl, token, categories: catIds });
       await fetchData();

@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug report
-about: Report a reproducible problem with GrafanaProbe
+about: Report a reproducible problem with Heimdall
 title: "[Bug] "
 labels: bug
 assignees: gpadidala
@@ -24,7 +24,7 @@ What you expected to happen.
 ## 🧾 Logs / error messages
 
 ```
-Paste the backend log from `grafana-probe.log` or the browser console here.
+Paste the backend log from `heimdall.log` or the browser console here.
 ```
 
 ## 📸 Screenshots
@@ -33,7 +33,7 @@ If applicable, add screenshots to help explain your problem.
 
 ## 🖥️ Environment
 
-- **GrafanaProbe version:** (e.g. v2.2.0)
+- **Heimdall version:** (e.g. v2.2.0)
 - **Node.js version:** (run `node -v`)
 - **Grafana version:** (e.g. 11.4.0)
 - **Grafana edition:** OSS / Enterprise / Cloud

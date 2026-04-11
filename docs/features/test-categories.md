@@ -1,6 +1,6 @@
 # The 17 Test Categories
 
-Every GrafanaProbe run is a composition of independent category modules. Each category lives in `backend/src/tests/{id}/index.js` and exposes a single `run(client, depGraph, options)` function that returns an array of test results. Categories are opt-in — pick only the ones you care about for each run.
+Every Heimdall run is a composition of independent category modules. Each category lives in `backend/src/tests/{id}/index.js` and exposes a single `run(client, depGraph, options)` function that returns an array of test results. Categories are opt-in — pick only the ones you care about for each run.
 
 | # | Id | Name | What it tests | Links API |
 |---|---|---|---|---|

@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const TOUR_STEPS = [
   {
     icon: '👋',
-    title: 'Welcome to GrafanaProbe',
+    title: 'Welcome to Heimdall',
     body: (
       <>
         <p>A complete testing platform for your Grafana stack — K6 API tests, Playwright E2E, JMeter performance, AI-generated tests, and upgrade-drift detection all in one app.</p>
@@ -399,9 +399,9 @@ export default function UserTour({ onComplete }) {
       {targetRect && <div style={styles.spotlight} />}
 
       {/* Tour panel */}
-      <div style={styles.panel} role="dialog" aria-label="GrafanaProbe product tour">
+      <div style={styles.panel} role="dialog" aria-label="Heimdall product tour">
         <div style={styles.header}>
-          <span style={styles.headerLogo}>GP</span>
+          <span style={styles.headerLogo}>H</span>
           <span style={styles.headerTitle}>Welcome Tour</span>
           <span style={styles.headerStep}>{step + 1} / {TOUR_STEPS.length}</span>
           <button

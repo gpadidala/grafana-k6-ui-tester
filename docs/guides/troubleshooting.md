@@ -11,7 +11,7 @@ Caused by `npm workspaces` hoisting frontend deps. Fix: `rm -rf node_modules pac
 Your corporate proxy does MITM SSL inspection. Set `HTTP_PROXY` / `HTTPS_PROXY` env vars before `docker compose build`. See [Docker deployment](../deployment/docker.md#corporate-networks-ssl-proxy).
 
 ### `better-sqlite3` native build fails
-GrafanaProbe uses `sql.js` (pure JS) instead. If you're seeing this, you're on an old version — update to latest.
+Heimdall uses `sql.js` (pure JS) instead. If you're seeing this, you're on an old version — update to latest.
 
 ## Runtime issues
 
@@ -39,5 +39,5 @@ Set `DEBUG=1` in `.env` and restart the backend — you'll get verbose logging o
 
 ## Still stuck?
 
-- Check `grafana-probe.log` for stack traces
+- Check `heimdall.log` for stack traces
 - Open a [bug report](../../.github/ISSUE_TEMPLATE/bug_report.md) with your Grafana version, the exact error, and the category that failed

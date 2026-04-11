@@ -128,7 +128,7 @@ export default function OnboardingModal({ onComplete }) {
     // Versioned onboarded flag is written by AppContext.closeOnboarding
     // (which is what `onComplete` points at). Keep the default-env
     // side-channel here since it's unrelated to the tour version.
-    if (env) try { localStorage.setItem('grafanaprobe_default_env', env); } catch {}
+    if (env) try { localStorage.setItem('heimdall_default_env', env); } catch {}
     onComplete && onComplete();
   };
 
@@ -144,7 +144,7 @@ export default function OnboardingModal({ onComplete }) {
         {step === 1 && (
           <div style={styles.step}>
             <div style={styles.logo}>GP</div>
-            <h2 style={styles.title}>Welcome to GrafanaProbe</h2>
+            <h2 style={styles.title}>Welcome to Heimdall</h2>
             <p style={styles.subtitle}>
               The enterprise testing platform for Grafana.<br/>
               17 test categories. 3 engines. One dashboard.

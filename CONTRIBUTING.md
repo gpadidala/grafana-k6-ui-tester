@@ -1,10 +1,10 @@
-# Contributing to GrafanaProbe
+# Contributing to Heimdall
 
-Thanks for considering a contribution! GrafanaProbe is maintained by [Gopal Rao](https://github.com/gpadidala) and built for the Grafana community — every PR is reviewed personally.
+Thanks for considering a contribution! Heimdall is maintained by [Gopal Rao](https://github.com/gpadidala) and built for the Grafana community — every PR is reviewed personally.
 
 ## Reporting bugs
 
-Open a [bug report](.github/ISSUE_TEMPLATE/bug_report.md) with: your Grafana version, GrafanaProbe version, the category that failed, the exact error message, and reproduction steps. Screenshots help a lot.
+Open a [bug report](.github/ISSUE_TEMPLATE/bug_report.md) with: your Grafana version, Heimdall version, the category that failed, the exact error message, and reproduction steps. Screenshots help a lot.
 
 ## Requesting features
 
@@ -28,4 +28,4 @@ Open a [feature request](.github/ISSUE_TEMPLATE/feature_request.md) describing t
 
 ## Questions
 
-Open a [discussion](https://github.com/gpadidala/grafana-probe/discussions) or reach out via the links in the [README](README.md#-license--author).
+Open a [discussion](https://github.com/gpadidala/heimdall/discussions) or reach out via the links in the [README](README.md#-license--author).

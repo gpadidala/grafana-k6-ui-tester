@@ -1,6 +1,6 @@
 {
-  "name": "grafana-probe-frontend",
-  "version": "2.0.0",
+  "name": "heimdall-frontend",
+  "version": "3.0.0",
   "private": true,
   "dependencies": {
     "react": "^18.3.1",

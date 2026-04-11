@@ -58,4 +58,4 @@ All successful responses are `200` with a JSON body. Errors are `4xx` / `5xx` wi
 
 ## Authentication
 
-There's no auth on the GrafanaProbe API itself — it's designed to run inside your trusted network. For public exposure, put it behind a reverse proxy with basic auth or OIDC.
+There's no auth on the Heimdall API itself — it's designed to run inside your trusted network. For public exposure, put it behind a reverse proxy with basic auth or OIDC.

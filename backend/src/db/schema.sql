@@ -1,4 +1,4 @@
--- GrafanaProbe v2 Schema
+-- Heimdall v3 Schema
 
 CREATE TABLE IF NOT EXISTS runs (
   id TEXT PRIMARY KEY,

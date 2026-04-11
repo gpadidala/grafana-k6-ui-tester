@@ -13,7 +13,7 @@ module.exports = {
   paths: {
     screenshots: process.env.SCREENSHOTS_DIR || './screenshots',
     reports: process.env.REPORTS_DIR || './reports',
-    db: process.env.DB_PATH || './data/grafana-probe.db',
+    db: process.env.DB_PATH || './data/heimdall.db',
   },
   thresholds: {
     queryTimeoutMs: parseInt(process.env.QUERY_TIMEOUT_MS || '15000', 10),

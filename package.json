@@ -1,7 +1,7 @@
 {
-  "name": "grafana-probe",
-  "version": "2.0.0",
-  "description": "GrafanaProbe — Enterprise-grade Grafana testing platform by Gopal Rao",
+  "name": "heimdall",
+  "version": "3.0.0",
+  "description": "Heimdall — the watchman of your observability stack. K6 + Playwright + JMeter + AI-generated tests for Grafana. By Gopal Rao.",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",

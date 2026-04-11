@@ -96,7 +96,7 @@ function useSavedFlash() {
 }
 
 /* ── localStorage helpers ── */
-const LS_LLM = 'grafana_probe_llm';
+const LS_LLM = 'heimdall_llm';
 
 function loadLlm() {
   try { return JSON.parse(localStorage.getItem(LS_LLM)) || null; } catch { return null; }
@@ -170,7 +170,7 @@ export default function SettingsPage() {
   const [emailCfg, setEmailCfg] = useState({
     host: '', port: 587, secure: false,
     user: '', password: '',
-    fromAddress: '', fromName: 'GrafanaProbe',
+    fromAddress: '', fromName: 'Heimdall',
     defaultCc: '',
     enabled: false,
   });
@@ -358,12 +358,12 @@ export default function SettingsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={s.label}>From Address</label>
-            <StyledInput type="email" placeholder="grafanaprobe@example.com"
+            <StyledInput type="email" placeholder="heimdall@example.com"
               value={emailCfg.fromAddress} onChange={(e) => updateEmail('fromAddress', e.target.value)} />
           </div>
           <div>
             <label style={s.label}>From Name</label>
-            <StyledInput type="text" placeholder="GrafanaProbe"
+            <StyledInput type="text" placeholder="Heimdall"
               value={emailCfg.fromName} onChange={(e) => updateEmail('fromName', e.target.value)} />
           </div>
         </div>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
               Walk through the 4-step onboarding again. Useful for demos or
-              when showing GrafanaProbe to a new teammate. The tour also
+              when showing Heimdall to a new teammate. The tour also
               auto-shows once after app version bumps.
             </div>
           </div>

@@ -149,10 +149,10 @@ export default function Sidebar() {
     <aside className="gp-sidebar">
       <div className="gp-sidebar-logo">
         <div className="gp-sidebar-logo-row">
-          <span className="gp-sidebar-logo-text">GP</span>
+          <span className="gp-sidebar-logo-text">H</span>
           <div>
-            <span className="gp-sidebar-brand">GrafanaProbe</span>
-            <span className="gp-sidebar-badge">v2.0</span>
+            <span className="gp-sidebar-brand">Heimdall</span>
+            <span className="gp-sidebar-badge">v3.0</span>
           </div>
         </div>
         <div className="gp-sidebar-subtitle">by Gopal Rao</div>
@@ -203,7 +203,7 @@ export default function Sidebar() {
       <div className="gp-sidebar-bottom">
         <div className="gp-sidebar-bottom-left">
           <div className="gp-sidebar-cats">22 test categories</div>
-          <div className="gp-sidebar-version">GrafanaProbe v2.0.0</div>
+          <div className="gp-sidebar-version">Heimdall v3.0.0</div>
         </div>
         <button
           className="gp-sidebar-help"

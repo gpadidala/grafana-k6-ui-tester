@@ -8,7 +8,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'grafana-probe' },
+  defaultMeta: { service: 'heimdall' },
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
@@ -22,7 +22,7 @@ const logger = winston.createLogger({
       ),
     }),
     new winston.transports.File({
-      filename: 'grafana-probe.log',
+      filename: 'heimdall.log',
       maxsize: 10 * 1024 * 1024,
       maxFiles: 3,
     }),

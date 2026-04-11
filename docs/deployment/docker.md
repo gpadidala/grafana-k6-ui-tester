@@ -1,12 +1,12 @@
 # Docker Deployment
 
-GrafanaProbe ships with a multi-stage Dockerfile that builds both the React frontend and the Node backend into a single image serving everything on port 4000.
+Heimdall ships with a multi-stage Dockerfile that builds both the React frontend and the Node backend into a single image serving everything on port 4000.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/gpadidala/grafana-probe.git
-cd grafana-probe
+git clone https://github.com/gpadidala/heimdall.git
+cd heimdall
 
 docker compose build
 docker compose up -d
@@ -20,7 +20,7 @@ Open **<http://localhost:4000>**. The frontend is served by Express as static fi
 docker compose --profile with-grafana up -d
 ```
 
-This boots a pre-configured Grafana container alongside GrafanaProbe with anonymous admin access — useful for trying the app without wiring up your own Grafana.
+This boots a pre-configured Grafana container alongside Heimdall with anonymous admin access — useful for trying the app without wiring up your own Grafana.
 
 ## Corporate networks (SSL proxy)
 
@@ -41,7 +41,7 @@ Compose forwards these as `--build-arg` to both stages and the Dockerfile sets `
 - ✅ Set `NODE_ENV=production` in the compose file
 - ✅ Point at a real Grafana via `GRAFANA_URL` / `GRAFANA_API_TOKEN`
 - ✅ Put a reverse proxy in front if exposing publicly (nginx / Traefik / Caddy)
-- ✅ Back up `backend/data/grafana-probe.db` regularly
+- ✅ Back up `backend/data/heimdall.db` regularly
 
 ## Related
 

@@ -1,12 +1,12 @@
 services:
-  grafana-probe:
+  heimdall:
     build:
       context: .
       args:
         HTTP_PROXY: ${HTTP_PROXY:-}
         HTTPS_PROXY: ${HTTPS_PROXY:-}
         NO_PROXY: ${NO_PROXY:-}
-    container_name: grafana-probe
+    container_name: heimdall
     ports:
       - "4000:4000"
     environment:

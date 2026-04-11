@@ -2,9 +2,9 @@
 /**
  * record-demo.js
  *
- * Walks through GrafanaProbe's key pages with Playwright and captures
+ * Walks through Heimdall's key pages with Playwright and captures
  * the 9 static screenshots referenced in README.md + an animated GIF
- * demo at docs/assets/grafana-probe-demo.gif.
+ * demo at docs/assets/heimdall-demo.gif.
  *
  * Prerequisites (all installed locally, not saved to package.json):
  *   npm install playwright gif-encoder-2 canvas
@@ -17,7 +17,7 @@
  *   docs/assets/screenshots/02-run-tests.png
  *   ...
  *   docs/assets/screenshots/09-schedules.png
- *   docs/assets/grafana-probe-demo.gif  (animated walkthrough)
+ *   docs/assets/heimdall-demo.gif  (animated walkthrough)
  */
 
 const fs = require('fs');
@@ -39,7 +39,7 @@ const VIEWPORT = { width: 1440, height: 900 };
 const FRAME_DELAY_MS = 1200; // how long each frame holds in the gif
 
 const SHOTS_DIR = path.resolve(__dirname, '../docs/assets/screenshots');
-const GIF_PATH = path.resolve(__dirname, '../docs/assets/grafana-probe-demo.gif');
+const GIF_PATH = path.resolve(__dirname, '../docs/assets/heimdall-demo.gif');
 if (!fs.existsSync(SHOTS_DIR)) fs.mkdirSync(SHOTS_DIR, { recursive: true });
 
 // Pages to capture, in order. Each entry becomes a PNG + a GIF frame.
@@ -124,7 +124,7 @@ async function encodeGif(frames) {
 }
 
 (async () => {
-  console.log(`\n🎬 GrafanaProbe demo recorder`);
+  console.log(`\n🎬 Heimdall demo recorder`);
   console.log(`   host: ${HOST}`);
   console.log(`   output dir: ${SHOTS_DIR}`);
   console.log(`   gif: ${GIF_PATH}\n`);

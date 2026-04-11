@@ -3,7 +3,7 @@
 /**
  * snapshotDiff.js
  *
- * Semantic diff engine for GrafanaProbe's Dashboard Snapshot / Upgrade Drift (DSUD) feature.
+ * Semantic diff engine for Heimdall's Dashboard Snapshot / Upgrade Drift (DSUD) feature.
  *
  * Pure logic module: no I/O, no DB access. All inputs are plain objects; outputs are
  * plain arrays/objects. Fully unit-testable.

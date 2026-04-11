@@ -1,6 +1,6 @@
 # First Run Walkthrough
 
-A guided tour of what happens during your very first GrafanaProbe run, with screenshots of each step.
+A guided tour of what happens during your very first Heimdall run, with screenshots of each step.
 
 ## Landing page
 
@@ -8,7 +8,7 @@ When you open <http://localhost:3001> for the first time, the [Welcome Tour](../
 
 ## Configure your Grafana
 
-Before any test can run, GrafanaProbe needs to know where your Grafana lives and how to authenticate:
+Before any test can run, Heimdall needs to know where your Grafana lives and how to authenticate:
 
 1. Click **Settings** in the sidebar
 2. Expand **DEV** (or PERF / PROD)

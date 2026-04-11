@@ -176,7 +176,7 @@ const styles = {
 // user hasn't configured anything yet.
 function readLlmConfig() {
   try {
-    const raw = localStorage.getItem('grafana_probe_llm');
+    const raw = localStorage.getItem('heimdall_llm');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || !parsed.apiKey || parsed.provider === 'None') return null;

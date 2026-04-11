@@ -25,7 +25,7 @@ const DEFAULT_CONFIG = {
   user: '',
   password: '',
   fromAddress: '',
-  fromName: 'GrafanaProbe',
+  fromName: 'Heimdall',
   defaultCc: '',           // comma-separated list
   enabled: false,
 };
@@ -118,11 +118,11 @@ function buildFailureEmail({ test, dashboardTitle, dashboardUrl, screenshotUrl, 
 
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>GrafanaProbe Alert</title></head>
+<head><meta charset="UTF-8"><title>Heimdall Alert</title></head>
 <body style="margin:0;padding:24px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1f2937;">
   <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
     <div style="padding:20px 28px;background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;">
-      <div style="font-size:13px;opacity:0.85;margin-bottom:4px;">GrafanaProbe Alert</div>
+      <div style="font-size:13px;opacity:0.85;margin-bottom:4px;">Heimdall Alert</div>
       <div style="font-size:22px;font-weight:700;">${escapeHtml(status)}: ${escapeHtml(dashboardTitle || 'Dashboard')}</div>
     </div>
     <div style="padding:24px 28px;">
@@ -136,7 +136,7 @@ function buildFailureEmail({ test, dashboardTitle, dashboardUrl, screenshotUrl, 
       <div style="font-size:11px;color:#9ca3af;line-height:1.6;">
         Run ID: ${escapeHtml(runId || 'unknown')}<br/>
         Detected at: ${escapeHtml(runDate || new Date().toISOString())}<br/>
-        Sent by GrafanaProbe v2 — your test results notifier
+        Sent by Heimdall v2 — your test results notifier
       </div>
     </div>
   </div>
@@ -185,7 +185,7 @@ async function sendFailureNotification({ test, dashboardTitle, dashboardUrl, scr
 
   const transporter = buildTransporter(cfg);
   const from = cfg.fromName ? `"${cfg.fromName}" <${cfg.fromAddress}>` : cfg.fromAddress;
-  const subject = `[GrafanaProbe] ${test.status || 'FAIL'}: ${dashboardTitle || 'Dashboard'}${test.metadata && test.metadata.panelTitle ? ' → ' + test.metadata.panelTitle : ''}`;
+  const subject = `[Heimdall] ${test.status || 'FAIL'}: ${dashboardTitle || 'Dashboard'}${test.metadata && test.metadata.panelTitle ? ' → ' + test.metadata.panelTitle : ''}`;
   const html = buildFailureEmail({ test, dashboardTitle, dashboardUrl, screenshotUrl, runId, runDate });
 
   const info = await transporter.sendMail({
@@ -219,8 +219,8 @@ async function sendTestEmail(toAddress) {
   const info = await transporter.sendMail({
     from,
     to: target,
-    subject: '[GrafanaProbe] SMTP test email',
-    html: `<p>This is a test email from GrafanaProbe.</p>
+    subject: '[Heimdall] SMTP test email',
+    html: `<p>This is a test email from Heimdall.</p>
            <p>If you received this, your SMTP configuration is working correctly.</p>
            <p style="color:#6b7280;font-size:12px;">Sent at ${new Date().toISOString()}</p>`,
   });

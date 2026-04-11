@@ -1,4 +1,4 @@
-# GrafanaProbe v2 — Multi-stage Docker build
+# Heimdall v3 — Multi-stage Docker build
 # by Gopal Rao
 
 # Stage 1: Build frontend

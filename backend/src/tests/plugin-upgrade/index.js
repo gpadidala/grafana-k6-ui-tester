@@ -215,7 +215,7 @@ async function run(client, _depGraph, options = {}) {
       plan.push(`4. Panel config: Manually verify panel options in ${impactedPanels} panel(s) post-upgrade`);
     }
     plan.push(`${plan.length + 1}. Deploy: Install ${pluginId}@${toVersion} via grafana-cli or provisioning`);
-    plan.push(`${plan.length + 1}. Validate: Run GrafanaProbe post-deployment checks`);
+    plan.push(`${plan.length + 1}. Validate: Run Heimdall post-deployment checks`);
     plan.push(`${plan.length + 1}. Rollback: If issues, revert to ${pluginId}@${fromVersion}`);
 
     results.push({

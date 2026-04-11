@@ -5,7 +5,7 @@ const GrafanaClient = require('./services/grafanaClient');
 const TestEngine = require('./services/testEngine');
 
 const program = new Command();
-program.name('grafana-probe').version('2.0.0').description('GrafanaProbe — Enterprise Grafana Testing Platform by Gopal Rao');
+program.name('heimdall').version('3.0.0').description('Heimdall — the watchman of your observability stack. By Gopal Rao.');
 
 program
   .command('run')
@@ -20,7 +20,7 @@ program
     const engine = new TestEngine();
     const cats = opts.categories ? opts.categories.split(',') : engine.getCategories().map(c => c.id);
 
-    console.log(`\nGrafanaProbe v2.0 — by Gopal Rao\n`);
+    console.log(`\nHeimdall v3.0 — by Gopal Rao\n`);
     console.log(`URL:        ${opts.url}`);
     console.log(`Categories: ${cats.length}`);
     console.log(`Strategy:   ${opts.strategy}\n`);

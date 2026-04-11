@@ -1,6 +1,6 @@
 # Multi-Environment Support
 
-GrafanaProbe is built around the idea that one team typically runs 3 Grafanas: **DEV** (where developers iterate), **PERF** (staging / pre-prod), and **PROD**. Each has different URLs, different tokens, and different blast-radius risks.
+Heimdall is built around the idea that one team typically runs 3 Grafanas: **DEV** (where developers iterate), **PERF** (staging / pre-prod), and **PROD**. Each has different URLs, different tokens, and different blast-radius risks.
 
 ## Configuring environments
 
@@ -32,10 +32,10 @@ An active-env indicator is shown on every page, so you always know which environ
 
 ## CI/CD use cases
 
-In your pipeline, pass `envKey: 'PROD'` in the run-tests request body and GrafanaProbe tags the run for retention + reporting:
+In your pipeline, pass `envKey: 'PROD'` in the run-tests request body and Heimdall tags the run for retention + reporting:
 
 ```bash
-curl -X POST http://grafana-probe:4000/api/tests/run \
+curl -X POST http://heimdall:4000/api/tests/run \
   -H 'Content-Type: application/json' \
   -d '{"envKey":"PROD","categories":["api-health","alerts"],"grafanaUrl":"...","token":"..."}'
 ```

@@ -13,7 +13,7 @@ Every Grafana upgrade silently breaks *something*. Schema migrations, plugin inc
 Against your current (pre-upgrade) Grafana, run the full suite:
 
 ```bash
-curl -X POST http://grafana-probe:4000/api/tests/run \
+curl -X POST http://heimdall:4000/api/tests/run \
   -H 'Content-Type: application/json' \
   -d '{"envKey":"PROD","categories":["all"]}'
 ```
@@ -22,14 +22,14 @@ Take a **Snapshot** at the same time: **Snapshots → + Create Snapshot → "pre
 
 ### 2. Perform the upgrade
 
-Normal Grafana upgrade procedure. GrafanaProbe doesn't touch this.
+Normal Grafana upgrade procedure. Heimdall doesn't touch this.
 
 ### 3. Re-run tests *after* the upgrade
 
 Against the upgraded instance, same categories:
 
 ```bash
-curl -X POST http://grafana-probe:4000/api/tests/run \
+curl -X POST http://heimdall:4000/api/tests/run \
   -H 'Content-Type: application/json' \
   -d '{"envKey":"PROD","categories":["all"]}'
 ```
@@ -55,7 +55,7 @@ For any panel that broke, click the 📧 button in the HTML report. The dashboar
 Before doing the upgrade, use the **Dependency Graph** to see which dashboards use the plugins you're about to update:
 
 ```bash
-curl http://grafana-probe:4000/api/graph/impact/plugin/grafana-piechart-panel
+curl http://heimdall:4000/api/graph/impact/plugin/grafana-piechart-panel
 ```
 
 ## Related

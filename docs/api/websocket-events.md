@@ -1,6 +1,6 @@
 # WebSocket Events
 
-GrafanaProbe streams real-time progress from the backend to the browser via Socket.IO on the same port as the REST API (`:4000`). The frontend listens for these events to paint live progress; your custom client can too.
+Heimdall streams real-time progress from the backend to the browser via Socket.IO on the same port as the REST API (`:4000`). The frontend listens for these events to paint live progress; your custom client can too.
 
 ## Connecting
 

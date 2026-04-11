@@ -6,7 +6,7 @@ const LLMClient = require('./llm');
 const AdtgExecutor = require('./adtgExecutor');
 const logger = require('../utils/logger');
 
-const PLANNER_SYSTEM_PROMPT = `You are an expert Grafana SRE and test designer. Your job is to convert plain-English test intents into structured, runnable JSON test plans for the GrafanaProbe testing platform.
+const PLANNER_SYSTEM_PROMPT = `You are an expert Grafana SRE and test designer. Your job is to convert plain-English test intents into structured, runnable JSON test plans for the Heimdall testing platform.
 
 You have access to a strict, whitelisted action vocabulary:
 
