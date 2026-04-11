@@ -1,5 +1,6 @@
 const logger = require('../../utils/logger');
 const config = require('../../config');
+const { datasourceMatches, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'datasources';
 
@@ -77,8 +78,9 @@ function sampleQuery(ds) {
   return null;
 }
 
-async function run(client, _depGraph, _options) {
+async function run(client, _depGraph, options = {}) {
   const results = [];
+  const dsFilter = normalizeFilter(options.datasourceFilter);
 
   // ── Fetch datasources ──
   const dsRes = await client.getDataSources();
@@ -87,14 +89,30 @@ async function run(client, _depGraph, _options) {
     return results;
   }
 
-  const datasources = Array.isArray(dsRes.data) ? dsRes.data : [];
+  const allDatasources = Array.isArray(dsRes.data) ? dsRes.data : [];
+  // When scoped, only test the target datasource itself
+  const datasources = dsFilter ? allDatasources.filter((d) => datasourceMatches(d, dsFilter)) : allDatasources;
+
   results.push(result(
     'Datasource inventory',
-    datasources.length > 0 ? 'PASS' : 'WARN',
-    `Found ${datasources.length} datasource(s)`,
+    datasources.length > 0 ? 'PASS' : dsFilter ? 'FAIL' : 'WARN',
+    dsFilter
+      ? `Scoped to ${datasources.length} datasource(s) matching filter "${dsFilter.uid || dsFilter.name}"`
+      : `Found ${datasources.length} datasource(s)`,
     dsRes.ms,
-    { count: datasources.length, types: [...new Set(datasources.map(d => d.type))] }
+    { count: datasources.length, types: [...new Set(datasources.map(d => d.type))], filtered: !!dsFilter }
   ));
+
+  if (dsFilter && datasources.length === 0) {
+    results.push(result(
+      'Datasource scope',
+      'FAIL',
+      `No datasource matched the filter "${dsFilter.uid || dsFilter.name}"`,
+      0,
+      { filter: dsFilter }
+    ));
+    return results;
+  }
 
   // ── Default datasource check ──
   const defaults = datasources.filter(d => d.isDefault);

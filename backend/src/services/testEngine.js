@@ -27,6 +27,7 @@ const CATEGORIES = [
   { id: 'plugin-upgrade',     name: 'Plugin Upgrade',      icon: '🔄',  runner: require('../tests/plugin-upgrade') },
   { id: 'multi-org',          name: 'Multi-Org',           icon: '🏢',  runner: require('../tests/multi-org') },
   { id: 'baseline-regression', name: 'Baseline Regression', icon: '🔍',  runner: require('../tests/baseline-regression') },
+  { id: 'pre-deployment',     name: 'Pre-Deployment',      icon: '🛫',  runner: require('../tests/pre-deployment') },
   { id: 'post-deployment',    name: 'Post-Deployment',     icon: '🚀',  runner: require('../tests/post-deployment') },
 ];
 
@@ -127,10 +128,23 @@ class TestEngine {
 
   async getReports(limit = 50) {
     const runs = await ops.listRuns(limit);
-    return runs.map(r => {
+    // Attach category ids to each run so the Reports list can render
+    // them as tags. Total-category count is included so the UI can
+    // show "all" when every category was run.
+    const totalCategories = CATEGORIES.length;
+    const enriched = [];
+    for (const r of runs) {
       try { if (typeof r.summary === 'string') r.summary = JSON.parse(r.summary); } catch {}
-      return r;
-    });
+      try {
+        const cats = await ops.getCatResults(r.id);
+        r.categories_run = cats.map((c) => c.category_id);
+      } catch {
+        r.categories_run = [];
+      }
+      r.total_categories = totalCategories;
+      enriched.push(r);
+    }
+    return enriched;
   }
   async getReport(fileOrId) {
     try {

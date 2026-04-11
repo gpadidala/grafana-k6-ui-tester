@@ -2,6 +2,7 @@
 
 const config = require('../../config');
 const logger = require('../../utils/logger');
+const { dashboardUsesDatasource, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'data-freshness';
 
@@ -50,6 +51,7 @@ async function run(client, _depGraph, options = {}) {
     maxDashboards = 50,
     staleThresholdMs = config.thresholds.staleDataThresholdMs,
   } = options;
+  const dsFilter = normalizeFilter(options.datasourceFilter);
   const now = Date.now();
 
   // Fetch dashboards
@@ -71,6 +73,9 @@ async function run(client, _depGraph, options = {}) {
 
     const model = dashRes.data?.dashboard;
     if (!model || !Array.isArray(model.panels)) continue;
+
+    // Datasource scope: skip dashboards that don't reference the target DS
+    if (dsFilter && !dashboardUsesDatasource(model, dsFilter)) continue;
 
     const panels = flattenPanels(model.panels);
     const dashStale = [];

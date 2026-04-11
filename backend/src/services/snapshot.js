@@ -34,6 +34,22 @@ function countPanels(dash) {
   return total;
 }
 
+// Normalize an alert rule for fingerprinting. Strips fields that change
+// across saves but aren't meaningful for diff purposes.
+const VOLATILE_ALERT_FIELDS = ['id', 'updated', 'version', 'provenance'];
+function normalizeAlertRule(rule) {
+  if (!rule || typeof rule !== 'object') return rule;
+  const clone = JSON.parse(JSON.stringify(rule));
+  for (const f of VOLATILE_ALERT_FIELDS) {
+    if (f in clone) delete clone[f];
+  }
+  return clone;
+}
+function computeAlertFingerprint(rule) {
+  const canonical = stableStringify(normalizeAlertRule(rule));
+  return 'sha256:' + crypto.createHash('sha256').update(canonical).digest('hex');
+}
+
 class DashboardSnapshotService {
   constructor(grafanaUrl, token, orgId) {
     this.client = new GrafanaClient(grafanaUrl, token, orgId);
@@ -178,7 +194,57 @@ class DashboardSnapshotService {
       }
     }
 
-    // 6. Write grafana-meta
+    // 6. Pull alert rules, contact points, and notification policies.
+    //    Non-fatal: if the instance has alerting disabled or the endpoints
+    //    return 404, we log and continue with empty arrays.
+    safeEmit(onProgress, { stage: 'fetching-alerts' });
+    const [rulesRes, cpRes, npRes] = await Promise.all([
+      this.client.getAlertRules(),
+      this.client.getContactPoints(),
+      this.client.getNotificationPolicies(),
+    ]);
+
+    const alertRules = rulesRes.ok && Array.isArray(rulesRes.data) ? rulesRes.data : [];
+    const contactPoints = cpRes.ok && Array.isArray(cpRes.data) ? cpRes.data : [];
+    const notificationPolicies = npRes.ok ? (npRes.data || null) : null;
+
+    if (!rulesRes.ok) {
+      logger.warn('Snapshot: alert rules fetch failed', { error: rulesRes.error, status: rulesRes.status });
+    }
+
+    // Persist the alert bundle to the snapshot dir
+    storage.writeAlerts(dir, {
+      rules: alertRules,
+      contactPoints,
+      notificationPolicies,
+      capturedAt: new Date().toISOString(),
+    });
+
+    // Index alert rules in the DB for fast listing + diff
+    for (const rule of alertRules) {
+      const ruleUid = rule.uid;
+      if (!ruleUid) continue;
+      const fingerprint = computeAlertFingerprint(rule);
+      await ops.insertSnapshotAlert(
+        snapshotId,
+        ruleUid,
+        rule.title || '',
+        rule.folderUID || rule.folderUid || '',
+        rule.ruleGroup || rule.rule_group || '',
+        fingerprint,
+        rule.for || '',
+        rule.noDataState || '',
+        rule.execErrState || ''
+      );
+    }
+
+    safeEmit(onProgress, {
+      stage: 'alerts-captured',
+      alertRules: alertRules.length,
+      contactPoints: contactPoints.length,
+    });
+
+    // 7. Write grafana-meta
     safeEmit(onProgress, { stage: 'writing-manifest' });
     const grafanaMeta = {
       grafanaUrl: this.grafanaUrl,
@@ -198,10 +264,15 @@ class DashboardSnapshotService {
         url: d.url,
         isDefault: d.isDefault,
       })),
+      alerting: {
+        ruleCount: alertRules.length,
+        contactPointCount: contactPoints.length,
+        hasNotificationPolicies: !!notificationPolicies,
+      },
     };
     storage.writeGrafanaMeta(dir, grafanaMeta);
 
-    // 7. Write manifest
+    // 8. Write manifest
     const manifest = {
       id: snapshotId,
       name,
@@ -211,6 +282,8 @@ class DashboardSnapshotService {
       dashboardCount: dashboardEntries.length,
       panelCount: totalPanels,
       pluginCount: pluginList.length,
+      alertCount: alertRules.length,
+      contactPointCount: contactPoints.length,
       dashboards: dashboardEntries,
     };
     storage.writeManifest(dir, manifest);
@@ -239,7 +312,9 @@ class DashboardSnapshotService {
       dir,
       manifestChecksum,
       notes || null,
-      createdBy || null
+      createdBy || null,
+      alertRules.length,
+      contactPoints.length
     );
 
     // 10. saveDb() — note: ops.run already calls saveDb, but belt-and-suspenders
@@ -272,6 +347,8 @@ class DashboardSnapshotService {
       manifest,
       dashboardCount: dashboardEntries.length,
       panelCount: totalPanels,
+      alertCount: alertRules.length,
+      contactPointCount: contactPoints.length,
       durationMs,
     };
   }

@@ -31,6 +31,18 @@ async function getDb() {
   try {
     const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
     db.run(schema);
+    // Additive column migrations for tables that already exist from older
+    // deployments. sqlite's ALTER TABLE ADD COLUMN is idempotent-ish: it
+    // errors if the column exists, so we swallow those specific failures.
+    const addColumnSafe = (table, col, def) => {
+      try {
+        db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+      } catch (e) {
+        // "duplicate column name" — already migrated, ignore
+      }
+    };
+    addColumnSafe('snapshots', 'alert_count', 'INTEGER DEFAULT 0');
+    addColumnSafe('snapshots', 'contact_point_count', 'INTEGER DEFAULT 0');
     saveDb();
     logger.info('Database initialized', { path: DB_PATH });
   } catch (err) {
@@ -47,12 +59,30 @@ function saveDb() {
   fs.writeFileSync(DB_PATH, buffer);
 }
 
+// Debounced background flush — coalesces bursts of inserts (e.g. 1000
+// test_results in a test run) into a single disk write. Without this,
+// sql.js re-serialized the whole 7 MB DB on every row, blowing up
+// runtime to O(n²) and freezing the event loop.
+let saveTimer = null;
+let savePending = false;
+function scheduleSave() {
+  savePending = true;
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    if (savePending) {
+      savePending = false;
+      try { saveDb(); } catch (e) { /* best effort */ }
+    }
+  }, 250);
+}
+
 // ─── Query Helpers ───
 
 async function run(sql, params = []) {
   const d = await getDb();
   d.run(sql, params);
-  saveDb();
+  scheduleSave();
 }
 
 async function get(sql, params = []) {
@@ -96,6 +126,27 @@ const ops = {
   listRuns: (limit = 50) => all(`SELECT * FROM runs ORDER BY start_time DESC LIMIT ?`, [limit]),
   deleteRun: (id) => run(`DELETE FROM runs WHERE id=?`, [id]),
   deleteAllRuns: () => run(`DELETE FROM runs`),
+
+  // Retention: keep only the N most-recent runs for a given env_id; delete
+  // older runs and their cascaded rows. Returns the list of deleted run ids.
+  // Pass envId=null to prune runs that had no env attached.
+  pruneOldRuns: async (envId, keep) => {
+    if (!keep || keep < 1) return [];
+    const rows = envId
+      ? await all(`SELECT id FROM runs WHERE env_id=? ORDER BY start_time DESC`, [envId])
+      : await all(`SELECT id FROM runs WHERE env_id IS NULL ORDER BY start_time DESC`);
+    const toDelete = rows.slice(keep).map((r) => r.id);
+    for (const id of toDelete) {
+      // sql.js doesn't enforce FK cascades unless PRAGMA is on, so delete
+      // dependents explicitly to be safe.
+      await run(`DELETE FROM test_results WHERE run_id=?`, [id]);
+      await run(`DELETE FROM category_results WHERE run_id=?`, [id]);
+      await run(`DELETE FROM screenshots WHERE run_id=?`, [id]);
+      await run(`DELETE FROM latency_measurements WHERE run_id=?`, [id]);
+      await run(`DELETE FROM runs WHERE id=?`, [id]);
+    }
+    return toDelete;
+  },
 
   // Category Results
   insertCatResult: (id, runId, catId, catName, icon, status, summary, durationMs) =>
@@ -152,10 +203,15 @@ const ops = {
   getScreenshots: (limit = 50) => all(`SELECT * FROM screenshots ORDER BY created_at DESC LIMIT ?`, [limit]),
 
   // DSUD: Snapshots
-  insertSnapshot: (id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, storagePath, checksum, notes, createdBy) =>
-    run(`INSERT INTO snapshots (id,name,environment,grafana_version,grafana_url,dashboard_count,panel_count,plugin_count,storage_path,manifest_checksum,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, storagePath, checksum, notes, createdBy]),
+  insertSnapshot: (id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, storagePath, checksum, notes, createdBy, alertCount = 0, contactPointCount = 0) =>
+    run(`INSERT INTO snapshots (id,name,environment,grafana_version,grafana_url,dashboard_count,panel_count,plugin_count,alert_count,contact_point_count,storage_path,manifest_checksum,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, name, env, gfVer, gfUrl, dashCount, panelCount, pluginCount, alertCount, contactPointCount, storagePath, checksum, notes, createdBy]),
   listSnapshots: (limit = 100) => all(`SELECT * FROM snapshots ORDER BY created_at DESC LIMIT ?`, [limit]),
+
+  insertSnapshotAlert: (snapId, ruleUid, title, folderUid, ruleGroup, fingerprint, forDur, noDataState, execErrState) =>
+    run(`INSERT OR REPLACE INTO snapshot_alerts (snapshot_id,rule_uid,title,folder_uid,rule_group,fingerprint,for_duration,no_data_state,exec_err_state) VALUES (?,?,?,?,?,?,?,?,?)`,
+      [snapId, ruleUid, title, folderUid, ruleGroup, fingerprint, forDur, noDataState, execErrState]),
+  listSnapshotAlerts: (snapId) => all(`SELECT * FROM snapshot_alerts WHERE snapshot_id=? ORDER BY title`, [snapId]),
   getSnapshot: (id) => get(`SELECT * FROM snapshots WHERE id=?`, [id]),
   deleteSnapshot: (id) => run(`DELETE FROM snapshots WHERE id=?`, [id]),
   insertSnapshotDashboard: (snapId, uid, title, folder, fingerprint, panelCount, schemaVer) =>

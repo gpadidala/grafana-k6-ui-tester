@@ -33,6 +33,9 @@ const CHANGE_TYPES = {
   PANEL_REMOVED: 'PANEL_REMOVED',
   DASHBOARD_ADDED: 'DASHBOARD_ADDED',
   DASHBOARD_REMOVED: 'DASHBOARD_REMOVED',
+  ALERT_RULE_ADDED: 'ALERT_RULE_ADDED',
+  ALERT_RULE_REMOVED: 'ALERT_RULE_REMOVED',
+  ALERT_RULE_CHANGED: 'ALERT_RULE_CHANGED',
   COSMETIC: 'COSMETIC',
   UNKNOWN: 'UNKNOWN',
 };
@@ -993,6 +996,66 @@ async function diffSnapshots(baselineSnap, currentSnap, loadDashboardFn, opts = 
 
     completed++;
     onProgress({ stage: 'diffing', total, completed, current: title });
+  }
+
+  // ── Alert rule diff (fingerprint-based) ──
+  // Compares alert rules by uid. Removal is HIGH risk (someone deleted
+  // monitoring). Addition is LOW (new coverage). Change is MEDIUM — we
+  // don't deep-diff the rule body here, just flag the uid as changed.
+  const baseAlerts = (baselineSnap && baselineSnap.alerts) || [];
+  const currAlerts = (currentSnap && currentSnap.alerts) || [];
+  const baseAlertByUid = new Map();
+  for (const a of baseAlerts) {
+    if (a && a.rule_uid) baseAlertByUid.set(a.rule_uid, a);
+  }
+  const currAlertByUid = new Map();
+  for (const a of currAlerts) {
+    if (a && a.rule_uid) currAlertByUid.set(a.rule_uid, a);
+  }
+
+  for (const [uid, ba] of baseAlertByUid) {
+    const ca = currAlertByUid.get(uid);
+    if (!ca) {
+      items.push({
+        path: `alert:${uid}`,
+        changeType: CHANGE_TYPES.ALERT_RULE_REMOVED,
+        riskLevel: RISK_LEVELS.HIGH,
+        before: { uid, title: ba.title, fingerprint: ba.fingerprint },
+        after: undefined,
+        panelId: null,
+        panelTitle: null,
+        dashboardUid: uid,
+        dashboardTitle: `Alert: ${ba.title || uid}`,
+      });
+    } else if (ba.fingerprint !== ca.fingerprint) {
+      items.push({
+        path: `alert:${uid}`,
+        changeType: CHANGE_TYPES.ALERT_RULE_CHANGED,
+        riskLevel: RISK_LEVELS.MEDIUM,
+        before: { uid, title: ba.title, fingerprint: ba.fingerprint, for: ba.for_duration, noDataState: ba.no_data_state, execErrState: ba.exec_err_state },
+        after: { uid, title: ca.title, fingerprint: ca.fingerprint, for: ca.for_duration, noDataState: ca.no_data_state, execErrState: ca.exec_err_state },
+        panelId: null,
+        panelTitle: null,
+        dashboardUid: uid,
+        dashboardTitle: `Alert: ${ca.title || uid}`,
+      });
+    }
+    // Unchanged → skip
+  }
+  for (const [uid, ca] of currAlertByUid) {
+    if (!baseAlertByUid.has(uid)) {
+      items.push({
+        path: `alert:${uid}`,
+        changeType: CHANGE_TYPES.ALERT_RULE_ADDED,
+        riskLevel: RISK_LEVELS.LOW,
+        before: undefined,
+        after: { uid, title: ca.title, fingerprint: ca.fingerprint },
+        panelId: null,
+        panelTitle: null,
+        dashboardUid: uid,
+        dashboardTitle: `Alert: ${ca.title || uid}`,
+      });
+    }
   }
 
   return {

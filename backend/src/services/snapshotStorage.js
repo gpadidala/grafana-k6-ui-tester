@@ -93,6 +93,26 @@ function listDashboardFiles(dir) {
     .map((f) => f.replace(/\.json\.gz$/, ''));
 }
 
+// ─── Alerts JSON read/write (gzip) ───
+// A single alerts.json.gz file holds the full alert bundle: rules, contact
+// points, notification policies, and mute timings. One file keeps things
+// simple — alert configs are typically small (< 1 MB even on busy envs).
+function writeAlerts(dir, bundle) {
+  const filePath = path.join(dir, 'alerts.json.gz');
+  const payload = JSON.stringify(bundle);
+  const gz = zlib.gzipSync(Buffer.from(payload, 'utf-8'));
+  fs.writeFileSync(filePath, gz);
+  return filePath;
+}
+
+function readAlerts(dir) {
+  const filePath = path.join(dir, 'alerts.json.gz');
+  if (!fs.existsSync(filePath)) return null;
+  const gz = fs.readFileSync(filePath);
+  const raw = zlib.gunzipSync(gz).toString('utf-8');
+  return JSON.parse(raw);
+}
+
 // ─── Manifest & meta ───
 function writeManifest(dir, manifest) {
   const filePath = path.join(dir, 'manifest.json');
@@ -207,6 +227,8 @@ module.exports = {
   createSnapshotDir,
   writeDashboard,
   readDashboard,
+  writeAlerts,
+  readAlerts,
   writeManifest,
   readManifest,
   writeGrafanaMeta,

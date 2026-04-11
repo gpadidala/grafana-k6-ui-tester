@@ -26,6 +26,12 @@ module.exports = {
     vus: parseInt(process.env.K6_VUS || '10', 10),
     duration: process.env.K6_DURATION || '30s',
   },
+  retention: {
+    // How many most-recent runs to keep per environment. Older runs (and
+    // their test_results / category_results / screenshots) are auto-pruned
+    // after each new run completes. Set to 0 to disable pruning.
+    maxRunsPerEnv: parseInt(process.env.MAX_RUNS_PER_ENV || '5', 10),
+  },
   webhooks: {
     slack: process.env.SLACK_WEBHOOK_URL || '',
     pagerduty: process.env.PAGERDUTY_ROUTING_KEY || '',

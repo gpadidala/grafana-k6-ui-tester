@@ -1,6 +1,11 @@
 services:
   grafana-probe:
-    build: .
+    build:
+      context: .
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
     container_name: grafana-probe
     ports:
       - "4000:4000"

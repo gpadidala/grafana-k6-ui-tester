@@ -50,8 +50,30 @@ class JMeterRunner {
   async runPlans(planIds, options = {}, onProgress) {
     const threads = options.threads || 20;
     const durationSec = options.duration || 60;
+    const datasourceFilter = options.datasourceFilter || null;
     const runId = uuid();
     const results = [];
+
+    // Resolve the filter to a concrete DS record (for scoped health/query
+    // endpoints in ds-query-stress). Best-effort — if the lookup fails we
+    // just run the plan without scoping.
+    let scopedDs = null;
+    if (datasourceFilter && (datasourceFilter.uid || datasourceFilter.name)) {
+      try {
+        const axios = require('axios');
+        const headers = this.token ? { Authorization: `Bearer ${this.token}` } : {};
+        const r = await axios.get(`${this.grafanaUrl}/api/datasources`, { headers, timeout: 10000, validateStatus: () => true });
+        if (r.status === 200 && Array.isArray(r.data)) {
+          const needleUid = (datasourceFilter.uid || '').toLowerCase();
+          const needleName = (datasourceFilter.name || '').toLowerCase();
+          scopedDs = r.data.find((d) =>
+            (needleUid && String(d.uid).toLowerCase() === needleUid) ||
+            (needleName && String(d.name).toLowerCase() === needleName)
+          );
+        }
+      } catch (_) { /* ignore */ }
+    }
+    this._scopedDs = scopedDs;
 
     for (const planId of planIds) {
       const plan = PLANS.find(p => p.id === planId);
@@ -155,8 +177,19 @@ class JMeterRunner {
       'api-health-load': [...base, { name: 'Frontend Settings', path: '/api/frontend/settings' }, { name: 'DS List', path: '/api/datasources' }, { name: 'Dashboard Search', path: '/api/search?type=dash-db&limit=10' }, { name: 'Folders', path: '/api/folders?limit=20' }, { name: 'Alert Rules', path: '/api/v1/provisioning/alert-rules' }, { name: 'Plugins', path: '/api/plugins?embedded=0' }, { name: 'Annotations', path: '/api/annotations?limit=10' }],
       'auth-stress': [{ name: 'Login', path: '/login', method: 'POST', body: { user: 'admin', password: 'admin' } }, { name: 'User Session', path: '/api/user' }],
       'dashboard-load': [...base, { name: 'Search', path: '/api/search?type=dash-db&limit=50' }, { name: 'Folders', path: '/api/folders?limit=100' }],
-      'ds-query-stress': [...base, { name: 'DS List', path: '/api/datasources' }],
-      'ds-health': [{ name: 'DS List', path: '/api/datasources' }],
+      'ds-query-stress': this._scopedDs
+        ? [
+            ...base,
+            { name: `DS Health: ${this._scopedDs.name}`, path: `/api/datasources/uid/${this._scopedDs.uid}/health` },
+            { name: `DS Meta: ${this._scopedDs.name}`, path: `/api/datasources/uid/${this._scopedDs.uid}` },
+            { name: 'DS List', path: '/api/datasources' },
+          ]
+        : [...base, { name: 'DS List', path: '/api/datasources' }],
+      'ds-health': this._scopedDs
+        ? [
+            { name: `DS Health: ${this._scopedDs.name}`, path: `/api/datasources/uid/${this._scopedDs.uid}/health` },
+          ]
+        : [{ name: 'DS List', path: '/api/datasources' }],
       'alert-eval': [{ name: 'Alert Rules', path: '/api/v1/provisioning/alert-rules' }, { name: 'Contact Points', path: '/api/v1/provisioning/contact-points' }, { name: 'Policies', path: '/api/v1/provisioning/policies' }, { name: 'Silences', path: '/api/alertmanager/grafana/api/v2/silences' }],
       'plugin-api': [{ name: 'Plugins', path: '/api/plugins?embedded=0' }],
       'user-mgmt': [{ name: 'Org Users', path: '/api/org/users' }, { name: 'Teams', path: '/api/teams/search?perpage=100' }],

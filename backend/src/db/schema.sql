@@ -183,6 +183,21 @@ CREATE TABLE IF NOT EXISTS snapshot_dashboards (
   FOREIGN KEY (snapshot_id) REFERENCES snapshots(id) ON DELETE CASCADE
 );
 
+-- Alert rules captured in a snapshot
+CREATE TABLE IF NOT EXISTS snapshot_alerts (
+  snapshot_id TEXT NOT NULL,
+  rule_uid TEXT NOT NULL,
+  title TEXT,
+  folder_uid TEXT,
+  rule_group TEXT,
+  fingerprint TEXT NOT NULL,
+  for_duration TEXT,
+  no_data_state TEXT,
+  exec_err_state TEXT,
+  PRIMARY KEY (snapshot_id, rule_uid),
+  FOREIGN KEY (snapshot_id) REFERENCES snapshots(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS snapshot_diffs (
   id TEXT PRIMARY KEY,
   baseline_snapshot_id TEXT NOT NULL,

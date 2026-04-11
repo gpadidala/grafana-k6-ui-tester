@@ -1,4 +1,5 @@
 const logger = require('../../utils/logger');
+const { alertRuleUsesDatasource, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'alerts';
 
@@ -6,8 +7,9 @@ function result(name, status, detail, ms = 0, metadata = {}, uid = null) {
   return { name, status, detail, uid, ms, metadata };
 }
 
-async function run(client, _depGraph, _options) {
+async function run(client, _depGraph, options = {}) {
   const results = [];
+  const dsFilter = normalizeFilter(options.datasourceFilter);
 
   // ── 1. Alert rules ──
   const rulesRes = await client.getAlertRules();
@@ -33,13 +35,26 @@ async function run(client, _depGraph, _options) {
     results.push(result(
       'Alert rules inventory',
       allRules.length > 0 ? 'PASS' : 'WARN',
-      `Found ${allRules.length} alert rule(s)`,
+      `Found ${allRules.length} alert rule(s)${dsFilter ? ' (pre-filter)' : ''}`,
       rulesRes.ms,
       { ruleCount: allRules.length }
     ));
 
+    if (dsFilter) {
+      results.push(result(
+        'Datasource scope',
+        'PASS',
+        `Filtering to rules using datasource: ${dsFilter.uid || dsFilter.name}`,
+        0,
+        { filter: dsFilter }
+      ));
+    }
+
     // Per-rule checks
     for (const rule of allRules) {
+      // Datasource scope: skip rules that don't reference the target DS
+      if (dsFilter && !alertRuleUsesDatasource(rule, dsFilter)) continue;
+
       const ruleTitle = rule.title || rule.alert || rule.name || 'Unnamed';
       const ruleUid = rule.uid || null;
       const prefix = `[Rule] ${ruleTitle}`;

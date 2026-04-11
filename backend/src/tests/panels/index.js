@@ -1,5 +1,6 @@
 const logger = require('../../utils/logger');
 const config = require('../../config');
+const { dashboardUsesDatasource, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'panels';
 
@@ -36,8 +37,9 @@ function flattenPanels(panels) {
   return flat;
 }
 
-async function run(client, _depGraph, _options) {
+async function run(client, _depGraph, options = {}) {
   const results = [];
+  const dsFilter = normalizeFilter(options.datasourceFilter);
 
   // ── Fetch datasources for validation ──
   const dsRes = await client.getDataSources();
@@ -77,6 +79,10 @@ async function run(client, _depGraph, _options) {
     if (!dbRes.ok) continue;
 
     const model = dbRes.data?.dashboard || {};
+
+    // Skip dashboards that don't reference the target datasource
+    if (dsFilter && !dashboardUsesDatasource(model, dsFilter)) continue;
+
     const panels = flattenPanels(model.panels || []);
     totalPanels += panels.length;
 

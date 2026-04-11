@@ -1,4 +1,5 @@
 const logger = require('../../utils/logger');
+const { dashboardUsesDatasource, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'dashboards';
 
@@ -46,8 +47,9 @@ function extractDatasourceRefs(panels) {
   return [...refs];
 }
 
-async function run(client, _depGraph, _options) {
+async function run(client, _depGraph, options = {}) {
   const results = [];
+  const dsFilter = normalizeFilter(options.datasourceFilter);
 
   // ── Fetch dashboard list ──
   const searchRes = await client.searchDashboards();
@@ -60,10 +62,20 @@ async function run(client, _depGraph, _options) {
   results.push(result(
     'Dashboard inventory',
     dashList.length > 0 ? 'PASS' : 'WARN',
-    `Found ${dashList.length} dashboard(s)`,
+    `Found ${dashList.length} dashboard(s)${dsFilter ? ` (pre-filter)` : ''}`,
     searchRes.ms,
     { count: dashList.length }
   ));
+
+  if (dsFilter) {
+    results.push(result(
+      'Datasource scope',
+      'PASS',
+      `Filtering to dashboards using datasource: ${dsFilter.uid || dsFilter.name}`,
+      0,
+      { filter: dsFilter }
+    ));
+  }
 
   // ── Fetch all datasources for cross-reference ──
   const dsRes = await client.getDataSources();
@@ -78,6 +90,12 @@ async function run(client, _depGraph, _options) {
     const title = dash.title || uid;
     const prefix = `[${title}]`;
 
+    // Mark position in the results array so we can post-process every
+    // row we're about to push for this dashboard and attach dashboardMeta.
+    // Without this, the HTML report's Created/Last Updated columns would
+    // only populate for the "Dashboard info" row.
+    const markBefore = results.length;
+
     const dbRes = await client.getDashboardByUid(uid);
     if (!dbRes.ok) {
       results.push(result(`${prefix} Load`, 'FAIL', `Cannot load dashboard: ${dbRes.error}`, dbRes.ms, {}, uid));
@@ -86,6 +104,56 @@ async function run(client, _depGraph, _options) {
 
     const model = dbRes.data?.dashboard || {};
     const meta = dbRes.data?.meta || {};
+
+    // Datasource scope filter: skip dashboards that don't reference the
+    // target DS. We do this AFTER loading the dashboard because the search
+    // hit metadata doesn't include datasource refs.
+    if (dsFilter && !dashboardUsesDatasource(model, dsFilter)) {
+      continue;
+    }
+
+    // ── Dashboard info: who created/updated, version, view count ──
+    // Visit/view counts aren't in OSS Grafana's standard meta — we use
+    // meta.viewCount if Enterprise/usage-stats exposes it, else show "—".
+    const fmtDate = (iso) => {
+      if (!iso || iso.startsWith('0001')) return 'unknown';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch { return iso; }
+    };
+    const createdBy = meta.createdBy || 'unknown';
+    const updatedBy = meta.updatedBy || 'unknown';
+    const viewCount = (meta.viewCount != null) ? meta.viewCount : null;
+    const versionNum = meta.version || 0;
+    const detailParts = [
+      `👤 Created by ${createdBy} (${fmtDate(meta.created)})`,
+      `✏️ Last edited by ${updatedBy} (${fmtDate(meta.updated)})`,
+      `v${versionNum}`,
+      viewCount != null ? `${viewCount} views` : '— views',
+    ];
+    // Use status 'PASS' so it doesn't drag down the pass rate. The HTML
+    // renderer recognizes the name " Dashboard info" suffix and styles
+    // the row as a metadata header (no badge, info icon, gray bg).
+    results.push(result(
+      `${prefix} Dashboard info`,
+      'PASS',
+      detailParts.join(' · '),
+      0,
+      {
+        createdBy,
+        updatedBy,
+        created: meta.created || null,
+        updated: meta.updated || null,
+        version: versionNum,
+        viewCount,
+        folderTitle: meta.folderTitle || null,
+        url: meta.url || null,
+        infoRow: true,
+      },
+      uid
+    ));
+
     const panels = flattenPanels(model.panels || []);
     const id = model.id;
 
@@ -274,6 +342,24 @@ async function run(client, _depGraph, _options) {
       results.push(result(`${prefix} Tags`, 'WARN', 'Dashboard has no tags — consider adding for organization', 0, {}, uid));
     } else {
       results.push(result(`${prefix} Tags`, 'PASS', `Tags: ${tags.join(', ')}`, 0, { tags }, uid));
+    }
+
+    // Attach the dashboard's createdBy/updatedBy/version/views to every
+    // row we just pushed for this dashboard, so the HTML report's
+    // Created/Last Updated columns and Email button can populate per row.
+    const dashboardMeta = {
+      createdBy: meta.createdBy || 'unknown',
+      updatedBy: meta.updatedBy || 'unknown',
+      created: meta.created || null,
+      updated: meta.updated || null,
+      version: meta.version || 0,
+      viewCount: meta.viewCount != null ? meta.viewCount : null,
+      folderTitle: meta.folderTitle || null,
+    };
+    for (let i = markBefore; i < results.length; i++) {
+      const r = results[i];
+      if (!r.metadata) r.metadata = {};
+      r.metadata.dashboardMeta = dashboardMeta;
     }
   }
 

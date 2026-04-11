@@ -2,6 +2,7 @@
 
 const config = require('../../config');
 const logger = require('../../utils/logger');
+const { dashboardUsesDatasource, normalizeFilter } = require('../utils/dsFilter');
 
 const CAT = 'query-latency';
 
@@ -50,6 +51,7 @@ async function run(client, _depGraph, options = {}) {
     queryThresholdMs = config.thresholds.slowQueryThresholdMs,
     runId,
   } = options;
+  const dsFilter = normalizeFilter(options.datasourceFilter);
 
   // 1. Fetch dashboards
   const searchRes = await client.searchDashboards();
@@ -67,6 +69,9 @@ async function run(client, _depGraph, options = {}) {
 
     const model = dashRes.data?.dashboard;
     if (!model || !Array.isArray(model.panels)) continue;
+
+    // Datasource scope: skip dashboards that don't reference the target DS
+    if (dsFilter && !dashboardUsesDatasource(model, dsFilter)) continue;
 
     const panels = flattenPanels(model.panels);
     const dashLatencies = [];

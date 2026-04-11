@@ -1,4 +1,7 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const logger = require('../utils/logger');
 const config = require('../config');
 
@@ -82,9 +85,31 @@ class PlaywrightRunner {
     return { context, page };
   }
 
-  async runSuites(suiteIds, onProgress) {
+  async runSuites(suiteIds, onProgress, options = {}) {
     const results = [];
+    const runId = crypto.randomUUID();
+    const startedAt = new Date().toISOString();
     const { context, page } = await this.createAuthContext();
+
+    // Pre-resolve the datasource filter to a concrete DS record so specs
+    // can scope their dashboard iteration. Specs that don't look at this
+    // option simply ignore it.
+    let scopedDs = null;
+    if (options.datasourceFilter && (options.datasourceFilter.uid || options.datasourceFilter.name)) {
+      try {
+        const axios = require('axios');
+        const headers = this.token ? { Authorization: `Bearer ${this.token}` } : {};
+        const r = await axios.get(`${this.grafanaUrl}/api/datasources`, { headers, timeout: 10000, validateStatus: () => true });
+        if (r.status === 200 && Array.isArray(r.data)) {
+          const needleUid = (options.datasourceFilter.uid || '').toLowerCase();
+          const needleName = (options.datasourceFilter.name || '').toLowerCase();
+          scopedDs = r.data.find((d) =>
+            (needleUid && String(d.uid).toLowerCase() === needleUid) ||
+            (needleName && String(d.name).toLowerCase() === needleName)
+          );
+        }
+      } catch (_) { /* ignore — specs will see scopedDs=null */ }
+    }
 
     try {
       for (const suiteId of suiteIds) {
@@ -95,17 +120,43 @@ class PlaywrightRunner {
 
         const suiteResults = [];
         for (const specName of suite.specs) {
+          const pageUrlBefore = (() => { try { return page.url(); } catch { return ''; } })();
           try {
             const specFn = require(`./specs/${specName}`);
-            const specResults = await specFn(page, this.grafanaUrl, this.token, { onProgress, suiteId });
+            const specResults = await specFn(page, this.grafanaUrl, this.token, {
+              onProgress,
+              suiteId,
+              runId,
+              datasourceFilter: options.datasourceFilter || null,
+              scopedDs,
+            });
+
+            // Enrich each test result with the current page URL (helps user
+            // click through to the Grafana page where the test ran) and a
+            // source spec name for debugging.
+            const pageUrlAfter = (() => { try { return page.url(); } catch { return ''; } })();
+            for (const r of specResults) {
+              if (!r.url) r.url = pageUrlAfter || pageUrlBefore || this.grafanaUrl;
+              if (!r.spec) r.spec = specName;
+            }
+
             suiteResults.push(...specResults);
 
             for (const r of specResults) {
               if (onProgress) onProgress({ type: 'pw_test_result', suiteId, test: r });
             }
           } catch (e) {
-            suiteResults.push({ name: `${specName} Error`, status: 'FAIL', detail: e.message });
-            if (onProgress) onProgress({ type: 'pw_test_result', suiteId, test: { name: `${specName} Error`, status: 'FAIL', detail: e.message } });
+            const pageUrlAtError = (() => { try { return page.url(); } catch { return ''; } })();
+            const errTest = {
+              name: `${specName} Error`,
+              status: 'FAIL',
+              detail: e.message,
+              error: e.stack ? e.stack.split('\n').slice(0, 4).join('\n') : e.message,
+              url: pageUrlAtError || this.grafanaUrl,
+              spec: specName,
+            };
+            suiteResults.push(errTest);
+            if (onProgress) onProgress({ type: 'pw_test_result', suiteId, test: errTest });
           }
         }
 
@@ -127,7 +178,56 @@ class PlaywrightRunner {
       await context.close();
     }
 
-    return results;
+    // Persist a JSON report file in the same shape as K6 reports so the
+    // existing /api/reports/html/:file endpoint renders Playwright runs
+    // with the same template (Dashboard info banners + screenshot links).
+    const completedAt = new Date().toISOString();
+    const allTests = results.flatMap((s) => s.tests || []);
+    const totalPassed = allTests.filter((t) => t.status === 'PASS').length;
+    const totalFailed = allTests.filter((t) => t.status === 'FAIL').length;
+    const totalWarns = allTests.filter((t) => t.status === 'WARN').length;
+    const total = allTests.length;
+    const passRate = total > 0 ? `${((totalPassed / total) * 100).toFixed(1)}%` : '0%';
+
+    const report = {
+      id: runId,
+      grafanaUrl: this.grafanaUrl,
+      grafanaVersion: 'unknown',
+      startedAt,
+      completedAt,
+      status: totalFailed > 0 ? 'failed' : 'passed',
+      engine: 'playwright',
+      categories: results.map((s) => ({
+        id: s.id,
+        name: s.name,
+        icon: s.icon,
+        status: s.status,
+        tests: s.tests,
+        summary: s.summary,
+      })),
+      summary: { total, passed: totalPassed, failed: totalFailed, warnings: totalWarns, pass_rate: passRate },
+    };
+
+    try {
+      const reportsDir = path.resolve(config.paths.reports);
+      if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
+      const base = `report-pw-${runId.slice(0, 8)}-${new Date().toISOString().split('T')[0]}`;
+      const file = path.join(reportsDir, `${base}.json`);
+      fs.writeFileSync(file, JSON.stringify(report, null, 2));
+      report.htmlFile = `${base}.html`;
+      logger.info('Playwright report persisted', { file, runId });
+    } catch (err) {
+      logger.warn('Failed to persist Playwright report', { error: err.message });
+    }
+
+    // Return the structure the existing WS handler expects, plus runId
+    // and reportFile so the frontend can link to the HTML report.
+    return {
+      runId,
+      reportFile: report.htmlFile,
+      results,
+      report,
+    };
   }
 }
 
